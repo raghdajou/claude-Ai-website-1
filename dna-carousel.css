@@ -25,6 +25,35 @@ html, body {
 
 .stage:active { cursor: grabbing; }
 
+.stage:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: -6px;
+}
+
+.dna-toggle {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2000;
+  min-width: 88px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: 500 14px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.dna-toggle:hover { background: rgba(255, 255, 255, 0.16); }
+
+.dna-toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
 .dna {
   position: absolute;
   inset: 0;

@@ -7,9 +7,10 @@
   <link rel="stylesheet" href="dna-carousel.css" />
 </head>
 <body>
-  <main class="stage">
-    <div class="dna" id="dna" aria-roledescription="carousel" aria-label="Image gallery"></div>
+  <main class="stage" tabindex="0" aria-roledescription="carousel" aria-label="DNA image gallery. Use the left and right arrow keys to rotate.">
+    <div class="dna" id="dna"></div>
   </main>
+  <button class="dna-toggle" id="dna-toggle" type="button">Pause</button>
   <script src="dna-carousel.js"></script>
 </body>
 </html>

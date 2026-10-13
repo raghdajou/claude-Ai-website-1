@@ -41,9 +41,12 @@ for (let i = 0; i < CONFIG.pairs; i++) {
     const el = document.createElement("div");
     el.className = "dna-card";
     const img = document.createElement("img");
-    const { src, alt } = IMAGES[(i * 2 + strand) % IMAGES.length];
+    const index = i * 2 + strand;
+    const { src, alt } = IMAGES[index % IMAGES.length];
     img.src = src;
-    img.alt = alt;
+    // Each photo appears more than once; describe it only the first time.
+    img.alt = index < IMAGES.length ? alt : "";
+    img.decoding = "async";
     img.draggable = false;
     el.appendChild(img);
     root.appendChild(el);
@@ -57,6 +60,22 @@ let dragging = false;
 let lastX = 0;
 let last = performance.now();
 
+// Auto-rotation stops when the user pauses it, when the gallery has keyboard
+// focus, or (until the user presses Play) when reduced motion is requested.
+const toggle = document.getElementById("dna-toggle");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+let userPaused = reducedMotion.matches;
+let focusPaused = false;
+
+function targetSpeed() {
+  return userPaused || focusPaused ? 0 : CONFIG.speed;
+}
+
+function syncToggle() {
+  toggle.textContent = userPaused ? "Play" : "Pause";
+  toggle.setAttribute("aria-label", userPaused ? "Play rotation" : "Pause rotation");
+}
+
 function radius() {
   return Math.min(CONFIG.radius, window.innerWidth * 0.32);
 }
@@ -67,7 +86,9 @@ function render(now) {
 
   if (!dragging) {
     // Ease back toward the resting auto-rotation speed after a fling.
-    velocity += (CONFIG.speed - velocity) * Math.min(dt * 2, 1);
+    const target = targetSpeed();
+    velocity += (target - velocity) * Math.min(dt * 2, 1);
+    if (Math.abs(target - velocity) < 0.001) velocity = target;
     rotation += velocity * dt;
   }
 
@@ -111,9 +132,32 @@ const endDrag = () => { dragging = false; };
 stage.addEventListener("pointerup", endDrag);
 stage.addEventListener("pointercancel", endDrag);
 
-if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-  CONFIG.speed = 0;
+toggle.addEventListener("click", () => {
+  userPaused = !userPaused;
+  syncToggle();
+});
+
+reducedMotion.addEventListener("change", (e) => {
+  userPaused = e.matches;
+  syncToggle();
+});
+
+stage.addEventListener("focus", () => {
+  // Only keyboard focus pauses; a click-to-drag also focuses the stage.
+  focusPaused = stage.matches(":focus-visible");
+});
+stage.addEventListener("blur", () => { focusPaused = false; });
+
+stage.addEventListener("keydown", (e) => {
+  const step = { ArrowLeft: -CONFIG.twist, ArrowRight: CONFIG.twist }[e.key];
+  if (step === undefined) return;
+  e.preventDefault();
+  focusPaused = true;
   velocity = 0;
-}
+  rotation += step;
+});
+
+if (userPaused) velocity = 0;
+syncToggle();
 
 requestAnimationFrame(render);

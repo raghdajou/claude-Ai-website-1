@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   Aperture,
   ArrowUpRight,
@@ -34,11 +34,28 @@ const TIMELINE = [
 
 const ROW_ONE: LucideIcon[] = [Figma, Framer, Palette, PenTool, Layers, Type, Aperture, Chrome];
 const ROW_TWO: LucideIcon[] = [Camera, Brush, Box, Wand2, Figma, Framer, Type, Layers];
+const SOFTWARE = "Figma, Framer, Chrome, and tools for color, illustration, type, photography and 3D";
+
+// Visible keyboard focus for links on the dark background.
+const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]";
+
+function usePrefersReducedMotion() {
+  const query = "(prefers-reduced-motion: reduce)";
+  const [reduced, setReduced] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
 
 function SectionLabel({ children, align = "center" }: { children: string; align?: "center" | "start" }) {
   return (
     <div
-      className={`flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-white/70 ${
+      className={`flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/75 ${
         align === "center" ? "justify-center" : "justify-start"
       }`}
     >
@@ -50,14 +67,18 @@ function SectionLabel({ children, align = "center" }: { children: string; align?
 }
 
 function BackgroundVideo({ src }: { src: string }) {
+  // With reduced motion, show the first frame instead of looping playback.
+  const reducedMotion = usePrefersReducedMotion();
   return (
     <video
+      key={reducedMotion ? "still" : "playing"}
       className="absolute inset-0 h-full w-full object-cover"
       src={src}
-      autoPlay
+      autoPlay={!reducedMotion}
       loop
       muted
       playsInline
+      preload={reducedMotion ? "metadata" : "auto"}
       aria-hidden="true"
     />
   );
@@ -67,7 +88,7 @@ function MarqueeRow({ icons, direction }: { icons: LucideIcon[]; direction: "lef
   // Rendered twice so translating by -50% loops seamlessly.
   const items = [...icons, ...icons];
   return (
-    <div className="overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+    <div className="marquee overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
       <div
         className={`flex w-max gap-3 ${
           direction === "left" ? "animate-marquee-left" : "animate-marquee-right"
@@ -77,7 +98,6 @@ function MarqueeRow({ icons, direction }: { icons: LucideIcon[]; direction: "lef
           <div
             key={i}
             className="liquid-glass flex h-14 w-14 shrink-0 items-center justify-center rounded-xl md:h-16 md:w-16"
-            aria-hidden={i >= icons.length}
           >
             <Icon className="h-6 w-6 text-white/90" strokeWidth={1.5} />
           </div>
@@ -104,7 +124,7 @@ export default function Features() {
         </div>
         <a
           href="mailto:hi@maxreed.com"
-          className="liquid-glass shrink-0 self-start rounded-full px-5 py-2.5 text-sm text-white transition-colors hover:bg-white/5 sm:px-6 sm:py-3"
+          className={`liquid-glass inline-flex min-h-11 shrink-0 items-center self-start rounded-full px-5 py-2.5 text-sm text-white transition-colors hover:bg-white/5 sm:px-6 sm:py-3 ${FOCUS_RING}`}
         >
           Let's Team Up Today
         </a>
@@ -161,7 +181,8 @@ export default function Features() {
             <div className="relative px-5 md:px-6">
               <SectionLabel>Daily Software</SectionLabel>
             </div>
-            <div className="relative flex flex-col gap-3">
+            <p className="sr-only">Tools I use daily: {SOFTWARE}.</p>
+            <div className="relative flex flex-col gap-3" aria-hidden="true">
               <MarqueeRow icons={ROW_ONE} direction="left" />
               <MarqueeRow icons={ROW_TWO} direction="right" />
             </div>
@@ -169,11 +190,17 @@ export default function Features() {
 
           <article className="noise-overlay relative overflow-hidden rounded-2xl bg-[#324444] p-5 md:p-6">
             <SectionLabel align="start">Reach Me</SectionLabel>
-            <div className="mt-4 space-y-1 text-[15px]">
-              <a href="mailto:hi@maxreed.com" className="block text-white hover:text-white/80">
+            <div className="mt-3 text-[15px]">
+              <a
+                href="mailto:hi@maxreed.com"
+                className={`block w-fit rounded py-1 text-white transition-colors hover:text-white/80 ${FOCUS_RING}`}
+              >
                 hi@maxreed.com
               </a>
-              <a href="tel:+442078163" className="block text-white/70 hover:text-white">
+              <a
+                href="tel:+442078163"
+                className={`block w-fit rounded py-1 text-white/75 transition-colors hover:text-white ${FOCUS_RING}`}
+              >
                 +44 207 81 63
               </a>
             </div>
@@ -182,7 +209,7 @@ export default function Features() {
               <a
                 href="mailto:hi@maxreed.com"
                 aria-label="Email Max Reed"
-                className="liquid-glass flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/10"
+                className={`liquid-glass flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/10 ${FOCUS_RING}`}
               >
                 <ArrowUpRight className="h-4 w-4" strokeWidth={1.5} />
               </a>
