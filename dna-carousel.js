@@ -17,8 +17,8 @@ const IMAGES = [
   { id: "1557264322-b44d383a2906", alt: "Green and pink abstract fluid art" }, // Pawel Czerwinski
   { id: "1770320742270-0cacc28b56b9", alt: "Glowing golden test tube with bubbles" }, // Logan Voss
   { id: "1681911046064-e663d5192921", alt: "Textured DNA strand on a soft blue background" }, // digitale.de
-].map((img) => ({
-  src: `https://images.unsplash.com/photo-${img.id}?auto=format&fit=crop&w=480&h=330&q=75`,
+].map((img, i) => ({
+  src: `images/dna-${i + 1}.jpg`, // saved from images.unsplash.com/photo-<id>
   alt: img.alt,
 }));
 
