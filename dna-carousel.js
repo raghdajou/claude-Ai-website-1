@@ -1,16 +1,10 @@
 // DNA Carousel: image cards arranged on two intertwined strands of a helix
 // that spins continuously and can be dragged.
 
-// Replace these with the images from the Framer design.
+// Generated in Higgsfield (Nano Banana). Cards cycle through this list.
 const IMAGES = [
-  "images/1.jpg",
-  "images/2.jpg",
-  "images/3.jpg",
-  "images/4.jpg",
-  "images/5.jpg",
-  "images/6.jpg",
-  "images/7.jpg",
-  "images/8.jpg",
+  "https://d8j0ntlcm91z4.cloudfront.net/user_3Kdq4ccmeO9l2lYL3HY1EWht7Bo/hf_20261013_170938_62a2cf62-2004-4ae4-b03a-7802bc5eab77.png",
+  "https://d8j0ntlcm91z4.cloudfront.net/user_3Kdq4ccmeO9l2lYL3HY1EWht7Bo/hf_20261013_170123_38f4d25c-77b1-410a-b56b-804ee65f9c7a.png",
 ];
 
 const CONFIG = {
