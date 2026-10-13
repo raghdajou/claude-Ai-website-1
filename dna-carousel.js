@@ -1,11 +1,26 @@
 // DNA Carousel: image cards arranged on two intertwined strands of a helix
 // that spins continuously and can be dragged.
 
-// Generated in Higgsfield (Nano Banana). Cards cycle through this list.
+// Free images from Unsplash (https://unsplash.com/license); photographer in each comment.
 const IMAGES = [
-  "https://d8j0ntlcm91z4.cloudfront.net/user_3Kdq4ccmeO9l2lYL3HY1EWht7Bo/hf_20261013_170938_62a2cf62-2004-4ae4-b03a-7802bc5eab77.png",
-  "https://d8j0ntlcm91z4.cloudfront.net/user_3Kdq4ccmeO9l2lYL3HY1EWht7Bo/hf_20261013_170123_38f4d25c-77b1-410a-b56b-804ee65f9c7a.png",
-];
+  { id: "1637929476734-bd7f5f78e40a", alt: "White and blue DNA double helix on a dark background" }, // Warren Umoh
+  { id: "1643780668909-580822430155", alt: "Close-up of a blue and purple molecular structure" }, // Sangharsh Lohakare
+  { id: "1631556097152-c39479bbff93", alt: "Fluorescent blue cells under a microscope" }, // National Cancer Institute
+  { id: "1770320742520-99d616bba277", alt: "Glowing green test tube with bubbles" }, // Logan Voss
+  { id: "1641903202531-bfa6bf0c6419", alt: "Glowing white DNA double helix" }, // Sangharsh Lohakare
+  { id: "1594814532732-37c265b0dd3c", alt: "Bioluminescent blue waves on a rocky shore" }, // Trevor McKinnon
+  { id: "1732046801426-f32529468176", alt: "DNA helix made of red and white particles" }, // MJH SHIKDER
+  { id: "1576086476234-1103be98f096", alt: "Stress fibers and microtubules in cells" }, // National Cancer Institute
+  { id: "1770320742705-a1aa0bd9364d", alt: "Glowing pink test tube with bubbles" }, // Logan Voss
+  { id: "1628595351029-c2bf17511435", alt: "DNA double helix render on blue" }, // Braňo
+  { id: "1562156194-215edc144205", alt: "Phytoplankton under a microscope" }, // NOAA
+  { id: "1557264322-b44d383a2906", alt: "Green and pink abstract fluid art" }, // Pawel Czerwinski
+  { id: "1770320742270-0cacc28b56b9", alt: "Glowing golden test tube with bubbles" }, // Logan Voss
+  { id: "1681911046064-e663d5192921", alt: "Textured DNA strand on a soft blue background" }, // digitale.de
+].map((img) => ({
+  src: `https://images.unsplash.com/photo-${img.id}?auto=format&fit=crop&w=480&h=330&q=75`,
+  alt: img.alt,
+}));
 
 const CONFIG = {
   pairs: 14,          // rungs on the helix (each rung = 2 cards)
@@ -26,8 +41,9 @@ for (let i = 0; i < CONFIG.pairs; i++) {
     const el = document.createElement("div");
     el.className = "dna-card";
     const img = document.createElement("img");
-    img.src = IMAGES[(i * 2 + strand) % IMAGES.length];
-    img.alt = "";
+    const { src, alt } = IMAGES[(i * 2 + strand) % IMAGES.length];
+    img.src = src;
+    img.alt = alt;
     img.draggable = false;
     el.appendChild(img);
     root.appendChild(el);
