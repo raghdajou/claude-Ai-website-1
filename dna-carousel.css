@@ -1,0 +1,61 @@
+:root {
+  --bg: #0b0b0f;
+  --card-w: 160px;
+  --card-h: 110px;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 1400px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.stage:active { cursor: grabbing; }
+
+.dna {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.dna-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--card-w);
+  height: var(--card-h);
+  margin: calc(var(--card-h) / -2) 0 0 calc(var(--card-w) / -2);
+  border-radius: var(--radius);
+  overflow: hidden;
+  will-change: transform, opacity, filter;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.dna-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 600px) {
+  :root {
+    --card-w: 110px;
+    --card-h: 76px;
+  }
+}
