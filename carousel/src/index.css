@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  background: #141414;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
