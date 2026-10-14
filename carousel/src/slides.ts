@@ -8,41 +8,41 @@ export type Slide = {
   link: string;
 };
 
-// Photos: Unsplash (https://unsplash.com/license) — Warren Umoh, Sangharsh Lohakare, MJH SHIKDER, Braňo.
+// Photos and text from the Framer "Modern Carousel" component's defaults.
 export const SLIDES: Slide[] = [
   {
-    title: "Code of life.",
+    title: "Beyond ordinary.",
     category: "Art direction",
-    description: "A closer look at the structure that shapes every living thing.",
-    image: "images/dna-1.jpg",
-    alt: "White and blue DNA double helix on a dark background",
+    description: "A different perspective on the shapes, colours and details around us.",
+    image: "images/slide-1.jpg",
+    alt: "A single pink flower spike against a soft blue and violet background",
     buttonText: "Explore project",
     link: "#",
   },
   {
-    title: "Pure signal.",
+    title: "Soft encounters.",
     category: "Visual identity",
-    description: "Light, glow and a single strand — reduced to what matters.",
-    image: "images/dna-5.jpg",
-    alt: "Glowing white DNA double helix",
+    description: "Organic forms meet a clear visual language. Made to feel a little different.",
+    image: "images/slide-2.jpg",
+    alt: "A round purple allium flower on a pink and lavender background",
     buttonText: "View project",
     link: "#",
   },
   {
-    title: "Built from particles.",
+    title: "New dimensions.",
     category: "Creative exploration",
-    description: "Thousands of tiny points come together to form something whole.",
-    image: "images/dna-7.jpg",
-    alt: "DNA helix made of red and white particles",
+    description: "An exploration of depth, movement and unexpected combinations.",
+    image: "images/slide-3.jpg",
+    alt: "A thin flower stem silhouetted against a glowing orange background",
     buttonText: "Discover more",
     link: "#",
   },
   {
-    title: "Deep blue.",
+    title: "In good shape.",
     category: "Selected work",
-    description: "Calm colour, sharp detail, and a form everyone recognises.",
-    image: "images/dna-10.jpg",
-    alt: "DNA double helix render on blue",
+    description: "Simple ideas brought to life through thoughtful design and playful details.",
+    image: "images/slide-4.jpg",
+    alt: "A dried flower head silhouetted against a bright yellow background",
     buttonText: "Take a look",
     link: "#",
   },
