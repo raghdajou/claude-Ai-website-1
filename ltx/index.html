@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LTX — The world model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --retake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --retake-slow-ease: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  background: #000;
+  color: #fff;
+  font-family: 'Manrope', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+button { font-family: 'Manrope', system-ui, sans-serif; color: inherit; }
+
+::selection { background: rgba(255, 255, 255, 0.2); }
+:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ── Stage + media ─────────────────────────────────────────────── */
+.stage {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #000;
+}
+
+.media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+.media.is-visible { visibility: visible; }
+
+/* ── Hero copy ─────────────────────────────────────────────────── */
+.hero { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+
+.hero h1 {
+  position: absolute;
+  top: 35.9%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(901px, calc(100vw - 48px));
+  margin: 0;
+  text-align: center;
+  font-size: clamp(62px, 6.8vw, 100px);
+  font-weight: 500;
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 0.14);
+}
+.hero h1 span {
+  display: inline-block;
+  transition: opacity 900ms var(--retake-ease), filter 900ms var(--retake-ease), transform 900ms var(--retake-ease);
+}
+.hero h1 span:nth-child(2) { transition-delay: 90ms; }
+.hero h1 span:nth-child(3) { transition-delay: 180ms; }
+.stage.title-hidden .hero h1 span { opacity: 0; filter: blur(12px); transform: translateY(-10px); }
+
+.hero p {
+  position: absolute;
+  top: calc(46.78% + 94px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(734px, calc(100vw - 48px));
+  margin: 0;
+  text-align: center;
+  font-size: clamp(14px, 1.25vw, 18px);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.16);
+}
+
+/* ── Controller ────────────────────────────────────────────────── */
+.controller {
+  position: absolute;
+  top: 46.78%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(880px, calc(100vw - 48px));
+  height: 72px;
+  z-index: 20;
+}
+
+.glass { position: absolute; border-radius: 999px; }
+.glass::before,
+.glass::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.glass::before {
+  background:
+    radial-gradient(120% 150% at var(--glass-x, 24%) var(--glass-y, 8%), rgb(255 255 255 / 0.25), rgb(255 255 255 / 0) 53%),
+    linear-gradient(115deg, rgb(255 255 255 / 0.10), rgb(255 255 255 / 0) 42%);
+}
+.glass::after {
+  padding: 1px;
+  background: conic-gradient(from 225deg, #7fe3ff, rgb(255 255 255 / 0.35), #ffffff, #ffd7e6, rgb(255 255 255 / 0.35), #7fe3ff);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+}
+
+.track {
+  top: 4px;
+  left: 0;
+  width: 100%;
+  height: 64px;
+  background: rgb(24 55 82 / 0.31);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  -webkit-backdrop-filter: blur(9px) saturate(126%) contrast(108%) brightness(103%);
+          backdrop-filter: blur(9px) saturate(126%) contrast(108%) brightness(103%);
+  box-shadow:
+    0 14px 38px rgb(4 24 43 / 0.16),
+    0 2px 7px rgb(4 24 43 / 0.1),
+    inset 1px 1px 0 rgb(255 255 255 / 0.48),
+    inset -1px -1px 0 rgb(21 49 73 / 0.14),
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.16);
+  opacity: 1;
+  transition:
+    left 980ms var(--retake-slow-ease), width 980ms var(--retake-slow-ease),
+    top 980ms var(--retake-slow-ease), height 980ms var(--retake-slow-ease),
+    border-radius 980ms var(--retake-slow-ease), opacity 400ms linear;
+}
+.track::after { opacity: 0.27; }
+
+.capsule {
+  /* -1px on the controller = -5px relative to the track (which sits at 4px). */
+  top: -1px;
+  height: 72px;
+  left: var(--cap-left, -5px);
+  width: var(--cap-width, calc(20% + 5px));
+  background: rgb(246 251 255 / 0.24);
+  border: 1px solid rgb(255 255 255 / 0.28);
+  -webkit-backdrop-filter: blur(13px) saturate(128%) contrast(107%) brightness(105%);
+          backdrop-filter: blur(13px) saturate(128%) contrast(107%) brightness(105%);
+  box-shadow:
+    0 11px 28px rgb(4 24 43 / 0.17),
+    0 2px 6px rgb(4 24 43 / 0.1),
+    inset 1px 1px 0 rgb(255 255 255 / 0.62),
+    inset -1px -1px 0 rgb(20 49 73 / 0.18),
+    inset 0 0 12px rgb(255 255 255 / 0.055);
+  pointer-events: none;
+  transition:
+    left 620ms var(--retake-ease), width 620ms var(--retake-ease),
+    background-color 980ms var(--retake-slow-ease), opacity 420ms var(--retake-ease);
+}
+.capsule::after { opacity: 0.30; }
+
+.controller.collapsed .capsule {
+  left: calc(50% - 100px);
+  width: 200px;
+  background-color: rgb(246 251 255 / 0.14);
+  transition:
+    left 980ms var(--retake-slow-ease), width 980ms var(--retake-slow-ease),
+    background-color 980ms var(--retake-slow-ease), opacity 420ms var(--retake-ease);
+}
+.controller.collapsed .track { left: calc(50% - 96px); width: 192px; }
+/* Applied in the same recalc as .collapsed; the 650ms delay waits for the collapse. */
+.controller.rear-fade .track {
+  opacity: 0;
+  transition:
+    left 980ms var(--retake-slow-ease), width 980ms var(--retake-slow-ease),
+    top 980ms var(--retake-slow-ease), height 980ms var(--retake-slow-ease),
+    border-radius 980ms var(--retake-slow-ease), opacity 400ms linear 650ms;
+}
+
+.cells {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 14px;
+  font-size: 23px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  transition:
+    opacity 420ms var(--retake-ease), filter 420ms var(--retake-ease),
+    transform 980ms var(--retake-slow-ease), border-color 420ms var(--retake-ease);
+}
+.cell.label { transition: opacity 300ms var(--retake-ease), filter 420ms var(--retake-ease), transform 980ms var(--retake-slow-ease); }
+button.cell {
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  margin: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button.cell:disabled { cursor: default; }
+
+.controller.highlighting .cell.label { opacity: 0.5; }
+
+.controller.collapsed .cell:not(.chosen) {
+  opacity: 0;
+  filter: blur(10px);
+  transform: scale(0.94);
+  pointer-events: none;
+}
+.controller.restoring .cell:not(.chosen) {
+  transition:
+    opacity 760ms var(--retake-ease) 60ms, filter 760ms var(--retake-ease) 60ms,
+    transform 760ms var(--retake-ease) 60ms, border-color 760ms var(--retake-ease) 60ms;
+}
+
+.cell-text { display: inline-block; transition: opacity 300ms var(--retake-ease), filter 300ms var(--retake-ease); }
+.cell-text.fading { opacity: 0; filter: blur(10px); }
+.cell-text.returning { transition-duration: 760ms; }
+.cell.is-reset .cell-text {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  animation: reset-reveal 520ms var(--retake-ease) both;
+}
+@keyframes reset-reveal {
+  from { opacity: 0; filter: blur(10px); }
+  to { opacity: 1; filter: blur(0); }
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+.site-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: calc(58px + env(safe-area-inset-top)) 40px 40px;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.18);
+}
+.logo { display: inline-flex; color: #fff; }
+.logo svg { display: block; height: 24px; width: auto; }
+.meta {
+  display: flex;
+  align-items: center;
+  margin-left: clamp(48px, 5vw, 70px);
+  gap: clamp(28px, 3vw, 44px);
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+.try {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 152px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.75);
+  background: transparent;
+  color: #fff;
+  font-size: 18px;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+  transition: color 300ms var(--retake-ease), background-color 300ms var(--retake-ease), border-color 300ms var(--retake-ease);
+}
+.try:hover, .try:focus-visible { background: #fff; color: #0b1a26; border-color: #fff; text-shadow: none; }
+
+/* ── Status + notice ───────────────────────────────────────────── */
+.notice {
+  position: absolute;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 40;
+  display: none;
+  align-items: center;
+  gap: 14px;
+  max-width: calc(100vw - 32px);
+  padding: 8px 8px 8px 18px;
+  border-radius: 999px;
+  background: rgb(24 55 82 / 0.55);
+  border: 1px solid rgb(255 255 255 / 0.25);
+  -webkit-backdrop-filter: blur(9px);
+          backdrop-filter: blur(9px);
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+.notice.show { display: flex; }
+.notice button {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.75);
+  background: transparent;
+  font-size: 15px;
+  cursor: pointer;
+}
+.notice button:hover { background: #fff; color: #0b1a26; }
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .site-header { padding: calc(24px + env(safe-area-inset-top)) 24px 24px; }
+  .meta { font-size: 14px; gap: 22px; margin-left: 34px; }
+  .try { width: 116px; height: 36px; font-size: 14px; }
+  .cell { font-size: clamp(17px, 2.5vw, 24px); }
+}
+
+@media (max-width: 700px) {
+  .site-header { padding-left: 18px; padding-right: 18px; }
+  .logo svg { height: 21px; }
+  .meta { font-size: 12px; }
+  .meta .meta-2 { display: none; }
+  .try { width: 92px; height: 34px; font-size: 13px; }
+  .try::after { content: ''; position: absolute; inset: -6px -10px; }
+
+  .hero h1 {
+    top: 34%;
+    width: calc(100vw - 40px);
+    font-size: clamp(48px, 14vw, 64px);
+    line-height: 0.88;
+    white-space: normal;
+  }
+  .hero p { top: 77%; width: calc(100vw - 44px); font-size: 14px; }
+
+  .controller { top: 53%; width: calc(100vw - 40px); height: 156px; }
+  .track { top: 0; height: 156px; border-radius: 28px; }
+  .controller.collapsed .track {
+    left: calc(50% - 94px);
+    width: 188px;
+    top: calc(4vh - 28px);
+    top: calc(4dvh - 28px);
+    height: 56px;
+    border-radius: 999px;
+  }
+
+  .cells { grid-template-columns: 1fr 1fr; grid-template-rows: 48px 54px 54px; }
+  .cell { font-size: 17px; }
+  .cell.label { grid-column: 1 / -1; border-bottom: 1px solid rgb(255 255 255 / 0.12); }
+  .cell[data-index="1"], .cell[data-index="3"] { border-right: 1px solid rgb(255 255 255 / 0.12); }
+  .cell[data-index="1"], .cell[data-index="2"] { border-bottom: 1px solid rgb(255 255 255 / 0.12); }
+  button.cell { border-radius: 0; }
+  button.cell:active { background: rgb(255 255 255 / 0.06); }
+  button.cell:focus-visible { outline-offset: -3px; }
+  .controller.collapsed .cell.chosen { border-color: transparent; }
+  .controller.highlighting .cell.label { opacity: 1; }
+
+  /* No sliding hover capsule on phones; it only appears as the selected surface.
+     Not position:fixed — the transformed controller is the containing block. */
+  .capsule,
+  .controller.collapsed .capsule {
+    left: 50%;
+    top: 4vh;
+    top: 4dvh;
+    transform: translate(-50%, -50%);
+    width: 196px;
+    height: 64px;
+    background-color: rgb(246 251 255 / 0.18);
+  }
+  .capsule { opacity: 0; pointer-events: none; }
+  .controller.collapsed .capsule { opacity: 1; }
+}
+
+@media (max-width: 700px) and (max-height: 700px) {
+  .controller { top: 50%; }
+  .hero p { top: calc(50% + 168px); width: calc(100vw - 32px); font-size: 13px; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  /* Spec said 20%, but at 844×390 that crosses the face; 31% sits on the chest. */
+  .hero h1 { top: 31%; font-size: clamp(34px, 8vh, 56px); }
+  .controller { top: 50%; }
+  .hero p { top: auto; bottom: 8px; font-size: 13px; }
+}
+
+@media (max-width: 700px) and (max-height: 520px) and (orientation: landscape) {
+  /* Spec said 12%, which lands on the hat; 27% keeps it on the chest above the controller. */
+  .hero h1 { top: 27%; font-size: clamp(28px, 7vh, 44px); }
+  .controller { top: 46%; height: 118px; }
+  .track { height: 118px; }
+  .cells { grid-template-rows: 36px 41px 41px; }
+  .cell { font-size: 15px; }
+  .hero p { bottom: 6px; font-size: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capsule, .track, .cell, .cell-text, .hero h1 span, .try,
+  .controller.collapsed .capsule, .controller.rear-fade .track, .controller.restoring .cell:not(.chosen) {
+    transition-duration: 1ms !important;
+    transition-delay: 0s !important;
+  }
+  .cell.is-reset .cell-text { animation-duration: 1ms; }
+  .controller.collapsed .cell:not(.chosen),
+  .cell-text.fading,
+  .stage.title-hidden .hero h1 span { filter: none; }
+}
+</style>
+</head>
+<body>
+<main class="stage" id="stage">
+  <video class="media" id="v-colorway" src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-1.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-colorway-rev" src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-1-reverse.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-scene" src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-2.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-scene-rev" src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-2-reverse.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-light" src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-3.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-light-rev" src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-3-reverse.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-fullLook" src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-4.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-fullLook-rev" src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-4-reverse.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+
+  <div class="hero">
+    <h1><span>The</span> <span>world</span> <span>model</span></h1>
+    <p>LTX builds open world models that give you full control, from production-grade video to systems that understand and operate in the physical world.</p>
+  </div>
+
+  <div class="controller" id="controller" role="group" aria-label="Scene state controller">
+    <div class="glass track" aria-hidden="true"></div>
+    <div class="glass capsule" aria-hidden="true"></div>
+    <div class="cells">
+      <div class="cell label" data-index="0"><span class="cell-text">Select state →</span></div>
+      <button class="cell" type="button" data-index="1" data-branch="scene" data-label="Scene" disabled><span class="cell-text">Scene</span></button>
+      <button class="cell" type="button" data-index="2" data-branch="light" data-label="Lighting" disabled><span class="cell-text">Lighting</span></button>
+      <button class="cell" type="button" data-index="3" data-branch="colorway" data-label="Clothing" disabled><span class="cell-text">Clothing</span></button>
+      <button class="cell" type="button" data-index="4" data-branch="fullLook" data-label="Cast" disabled><span class="cell-text">Cast</span></button>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <a class="logo" href="#" aria-label="LTX home">
+      <svg viewBox="0 0 75 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <path fill="#fff" d="M0 0h6.4v25.6H22V32H0z"/>
+        <path fill="#fff" d="M23.5 0H49v6.4h-9.55V32h-6.4V6.4H23.5z"/>
+        <path fill="#fff" d="M50.2 0h7.3l5.85 10.3L69.2 0H75l-8.75 15.6L75 32h-7.3l-5.85-10.4L56 32h-5.8l8.75-16.4z"/>
+      </svg>
+    </a>
+    <div class="meta">
+      <span>LTX-2.5 is here</span>
+      <span class="meta-2">Smarter. Faster</span>
+    </div>
+    <a class="try" href="https://app.ltx.io/" target="_blank" rel="noopener noreferrer">Try now</a>
+  </header>
+
+  <div class="sr-only" id="status" role="status" aria-live="polite"></div>
+  <div class="notice" id="notice" role="alert">
+    <span id="notice-text"></span>
+    <button type="button" id="retry">Retry</button>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var FIRST_FRAME_TIMEOUT = 12000;
+  var DEFAULT_GUARD = 0.08;
+
+  // Each branch: forward clip, paired reverse clip, terminal hold guards (seconds before end).
+  var BRANCHES = {
+    scene:    { fwd: 'v-scene',    rev: 'v-scene-rev',    fwdGuard: DEFAULT_GUARD, revGuard: 0.18, name: 'Scene' },
+    light:    { fwd: 'v-light',    rev: 'v-light-rev',    fwdGuard: DEFAULT_GUARD, revGuard: DEFAULT_GUARD, name: 'Lighting' },
+    colorway: { fwd: 'v-colorway', rev: 'v-colorway-rev', fwdGuard: DEFAULT_GUARD, revGuard: DEFAULT_GUARD, name: 'Clothing' },
+    fullLook: { fwd: 'v-fullLook', rev: 'v-fullLook-rev', fwdGuard: DEFAULT_GUARD, revGuard: DEFAULT_GUARD, name: 'Cast' }
+  };
+
+  // Capsule positions: index 0 is the label, 1–4 the buttons. Outer positions protrude 5px.
+  var CAP_POS = [
+    { left: '-5px', width: 'calc(20% + 5px)' },
+    { left: '20%', width: '20%' },
+    { left: '40%', width: '20%' },
+    { left: '60%', width: '20%' },
+    { left: '80%', width: 'calc(20% + 5px)' }
+  ];
+
+  var stage = document.getElementById('stage');
+  var controller = document.getElementById('controller');
+  var labelCell = controller.querySelector('.cell.label');
+  var buttons = Array.prototype.slice.call(controller.querySelectorAll('button.cell'));
+  var statusEl = document.getElementById('status');
+  var notice = document.getElementById('notice');
+  var noticeText = document.getElementById('notice-text');
+  var retryBtn = document.getElementById('retry');
+  var mobileQuery = window.matchMedia('(max-width: 700px)');
+
+  var videos = {};
+  Array.prototype.forEach.call(document.querySelectorAll('video.media'), function (v) {
+    videos[v.id] = v;
+  });
+  var baseVideo = videos['v-colorway'];
+
+  // Mutable state lives here — nothing re-renders per frame.
+  var state = {
+    scene: 'base',          // 'base' | 'scene' | 'light' | 'colorway' | 'fullLook'
+    playback: 'loading',    // loading | ready | starting | playing | error
+    direction: null,        // 'forward' | 'reverse'
+    locked: false,
+    token: 0,
+    visible: null,          // the <video> currently shown
+    chosen: null,           // the button for the selected / transitioning branch
+    pending: null,          // active transition handle (for cleanup + hidden-tab handling)
+    ready: {},              // video id -> true once it has a decoded frame
+    failed: {},             // video id -> true on media error
+    hoverIndex: 0,
+    pointerInside: false,
+    retry: null,
+    announcedReady: false
+  };
+
+  // ── Announcements + notice ────────────────────────────────────
+  function announce(msg) {
+    statusEl.textContent = '';
+    window.requestAnimationFrame(function () { statusEl.textContent = msg; });
+  }
+
+  function showNotice(msg, retryFn) {
+    noticeText.textContent = msg;
+    state.retry = retryFn;
+    notice.classList.add('show');
+    announce(msg);
+  }
+
+  function hideNotice() {
+    notice.classList.remove('show');
+    state.retry = null;
+  }
+
+  retryBtn.addEventListener('click', function () {
+    var fn = state.retry;
+    hideNotice();
+    if (fn) fn();
+  });
+
+  // ── Readiness ─────────────────────────────────────────────────
+  function markReady(v) {
+    if (state.ready[v.id]) return;
+    state.ready[v.id] = true;
+    delete state.failed[v.id];
+    if (v === baseVideo && !state.visible) {
+      // Base scene = video-1 parked paused at frame 0.
+      baseVideo.pause();
+      baseVideo.classList.add('is-visible');
+      state.visible = baseVideo;
+    }
+    updateAvailability();
+  }
+
+  function branchReady(key) {
+    var b = BRANCHES[key];
+    return !!(state.ready[b.fwd] && state.ready[b.rev]);
+  }
+
+  function updateAvailability() {
+    if (state.locked || state.scene !== 'base') return;
+    var all = true;
+    buttons.forEach(function (btn) {
+      var ok = branchReady(btn.getAttribute('data-branch'));
+      btn.disabled = !ok;
+      if (!ok) all = false;
+    });
+    if (state.playback === 'loading' && all) state.playback = 'ready';
+    if (all && !state.announcedReady) {
+      state.announcedReady = true;
+      announce('Ready. Choose Scene, Lighting, Clothing or Cast.');
+    }
+  }
+
+  Object.keys(videos).forEach(function (id) {
+    var v = videos[id];
+    // Cached media may never fire loadeddata again, so check up front too.
+    if (v.readyState >= 2) markReady(v);
+    v.addEventListener('loadeddata', function () { markReady(v); });
+    v.addEventListener('error', function () {
+      if (state.ready[v.id]) return;
+      state.failed[v.id] = true;
+      showNotice('Some footage could not load.', function () {
+        Object.keys(state.failed).forEach(function (fid) { videos[fid].load(); });
+      });
+    });
+  });
+  announce('Loading footage…');
+
+  // ── Capsule hover / focus ─────────────────────────────────────
+  function moveCapsule(index) {
+    state.hoverIndex = index;
+    controller.style.setProperty('--cap-left', CAP_POS[index].left);
+    controller.style.setProperty('--cap-width', CAP_POS[index].width);
+    controller.classList.toggle('highlighting', index > 0);
+  }
+
+  function isKeyboardFocused(el) {
+    try { return el.matches(':focus-visible'); } catch (e) { return document.activeElement === el; }
+  }
+
+  function focusedButton() {
+    var a = document.activeElement;
+    return buttons.indexOf(a) >= 0 && isKeyboardFocused(a) ? a : null;
+  }
+
+  buttons.forEach(function (btn) {
+    var index = Number(btn.getAttribute('data-index'));
+    btn.addEventListener('pointerenter', function () {
+      if (!controller.classList.contains('collapsed')) moveCapsule(index);
+    });
+    btn.addEventListener('focus', function () {
+      if (!controller.classList.contains('collapsed') && isKeyboardFocused(btn)) moveCapsule(index);
+    });
+    btn.addEventListener('blur', function () {
+      window.requestAnimationFrame(function () {
+        if (!state.pointerInside && !focusedButton()) moveCapsule(0);
+      });
+    });
+    btn.addEventListener('click', function () { onControl(btn); });
+  });
+
+  controller.addEventListener('pointerenter', function () { state.pointerInside = true; });
+  controller.addEventListener('pointerleave', function () {
+    state.pointerInside = false;
+    var f = focusedButton();
+    moveCapsule(f ? Number(f.getAttribute('data-index')) : 0);
+  });
+  controller.addEventListener('pointermove', function (e) {
+    var r = controller.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    controller.style.setProperty('--glass-x', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+    controller.style.setProperty('--glass-y', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+  });
+
+  // ── Controller visual states ──────────────────────────────────
+  function capsuleCentre() {
+    var r = controller.getBoundingClientRect();
+    var y = mobileQuery.matches ? r.top + window.innerHeight * 0.04 : r.top + 35; // top -1px + 72/2
+    return { x: r.left + r.width / 2, y: y };
+  }
+
+  function placeChosenLabel(btn, instant) {
+    var prev = btn.style.transform;
+    btn.style.transition = 'none';
+    btn.style.transform = 'none';
+    var r = btn.getBoundingClientRect();
+    var c = capsuleCentre();
+    var t = 'translate(' + (c.x - (r.left + r.width / 2)).toFixed(1) + 'px, ' + (c.y - (r.top + r.height / 2)).toFixed(1) + 'px)';
+    if (!instant) {
+      btn.style.transform = prev || 'none';
+      void btn.offsetWidth; // commit the starting point before re-enabling the transition
+      btn.style.transition = '';
+    }
+    btn.style.transform = t;
+    if (instant) {
+      void btn.offsetWidth;
+      btn.style.transition = '';
+    }
+  }
+
+  function setBranchSemantics(selectedBtn) {
+    // In the selected state only Reset is reachable; everything else leaves the tab order.
+    buttons.forEach(function (btn) {
+      if (selectedBtn && btn !== selectedBtn) {
+        btn.disabled = true;
+        btn.setAttribute('aria-hidden', 'true');
+        btn.setAttribute('tabindex', '-1');
+      } else {
+        btn.removeAttribute('aria-hidden');
+        btn.removeAttribute('tabindex');
+      }
+    });
+    if (selectedBtn) labelCell.setAttribute('aria-hidden', 'true');
+    else labelCell.removeAttribute('aria-hidden');
+  }
+
+  function collapseUI(btn) {
+    btn.classList.add('chosen');
+    controller.classList.remove('restoring', 'highlighting');
+    // Collapse and the delayed rear fade go in the same style recalc.
+    controller.classList.add('collapsed', 'rear-fade');
+    placeChosenLabel(btn, false);
+  }
+
+  function expandUI(btn, restoring) {
+    controller.classList.toggle('restoring', !!restoring);
+    controller.classList.remove('collapsed', 'rear-fade');
+    if (btn) btn.style.transform = '';
+    moveCapsule(0);
+  }
+
+  function setResetLabel(btn) {
+    var text = btn.querySelector('.cell-text');
+    text.classList.remove('fading', 'returning');
+    text.textContent = 'Reset';
+    btn.classList.add('is-reset');
+    btn.setAttribute('aria-label', 'Reset ' + btn.getAttribute('data-label'));
+  }
+
+  function restoreOptionLabel(btn, token) {
+    var text = btn.querySelector('.cell-text');
+    text.classList.remove('returning');
+    text.classList.add('fading');
+    window.setTimeout(function () {
+      // Skip if a newer transition took over or this reverse already failed back to Reset.
+      if (token !== state.token || state.playback === 'error') return;
+      btn.classList.remove('is-reset');
+      btn.removeAttribute('aria-label');
+      text.textContent = btn.getAttribute('data-label');
+      text.classList.add('returning');
+      void text.offsetWidth;
+      text.classList.remove('fading');
+    }, 300);
+  }
+
+  function disableAll() {
+    buttons.forEach(function (b) { b.disabled = true; });
+  }
+
+  // ── Pausable first-frame deadline ─────────────────────────────
+  function Deadline(ms, onExpire) {
+    this.remaining = ms;
+    this.onExpire = onExpire;
+    this.timer = null;
+    this.startedAt = 0;
+    this.resume();
+  }
+  Deadline.prototype.resume = function () {
+    if (this.timer || this.remaining <= 0) return;
+    var self = this;
+    this.startedAt = Date.now();
+    this.timer = window.setTimeout(function () { self.timer = null; self.remaining = 0; self.onExpire(); }, this.remaining);
+  };
+  Deadline.prototype.pause = function () {
+    if (!this.timer) return;
+    window.clearTimeout(this.timer);
+    this.timer = null;
+    this.remaining -= Date.now() - this.startedAt;
+  };
+  Deadline.prototype.cancel = function () {
+    if (this.timer) window.clearTimeout(this.timer);
+    this.timer = null;
+    this.remaining = 0;
+  };
+
+  // ── Seam-safe player ──────────────────────────────────────────
+  // Plays `target` from 0, reveals it only once a decoded frame from this request is
+  // on screen, then holds it paused `guard` seconds before its end.
+  function runClip(target, guard, token, onProgress) {
+    var handle = {
+      video: target, token: token, revealed: false, hiddenPause: false,
+      deadline: null, frameId: null, rafId: null, cleanups: [], replay: null
+    };
+    state.pending = handle;
+
+    function stale() { return token !== state.token; }
+    function cleanup() {
+      if (handle.deadline) handle.deadline.cancel();
+      if (handle.frameId !== null && target.cancelVideoFrameCallback) target.cancelVideoFrameCallback(handle.frameId);
+      if (handle.rafId !== null) window.cancelAnimationFrame(handle.rafId);
+      handle.cleanups.forEach(function (fn) { fn(); });
+      handle.cleanups = [];
+      if (state.pending === handle) state.pending = null;
+    }
+    function listen(type, fn) {
+      target.addEventListener(type, fn);
+      handle.cleanups.push(function () { target.removeEventListener(type, fn); });
+    }
+
+    var started = new Promise(function (resolve, reject) {
+      handle.deadline = new Deadline(FIRST_FRAME_TIMEOUT, function () {
+        if (!stale()) reject(new Error('timeout')); // a timeout is never a decoded frame
+      });
+
+      function rewind() {
+        return new Promise(function (res) {
+          target.pause();
+          if (target.currentTime <= 0.001) { res(); return; }
+          var onSeeked = function () { target.removeEventListener('seeked', onSeeked); res(); };
+          target.addEventListener('seeked', onSeeked);
+          target.currentTime = 0;
+        });
+      }
+
+      rewind().then(function () {
+        if (stale()) return;
+
+        // Register the first-frame wait BEFORE play().
+        var framePromise = new Promise(function (resFrame) {
+          if (typeof target.requestVideoFrameCallback === 'function') {
+            var onFrame = function (now, meta) {
+              handle.frameId = null;
+              if (stale()) return;
+              // A stale endpoint frame carries a large mediaTime — keep waiting.
+              if (meta.mediaTime <= 0.5 && target.readyState >= 2) resFrame();
+              else handle.frameId = target.requestVideoFrameCallback(onFrame);
+            };
+            handle.frameId = target.requestVideoFrameCallback(onFrame);
+          } else {
+            var check = function () {
+              handle.rafId = null;
+              if (stale()) return;
+              if (!target.paused && target.readyState >= 2 && target.currentTime > 0 && target.currentTime <= 0.5) {
+                handle.rafId = window.requestAnimationFrame(function () {
+                  handle.rafId = window.requestAnimationFrame(function () { handle.rafId = null; if (!stale()) resFrame(); });
+                });
+              } else {
+                handle.rafId = window.requestAnimationFrame(check);
+              }
+            };
+            var onPlaying = function () { target.removeEventListener('playing', onPlaying); check(); };
+            listen('playing', onPlaying);
+          }
+        });
+
+        var playPromise = new Promise(function (resPlay, rejPlay) {
+          handle.replay = function () {
+            var p = target.play();
+            if (p && typeof p.then === 'function') {
+              p.then(resPlay, function (err) {
+                // Our own hidden-tab pause interrupts play(); the replay on show handles it.
+                if (stale() || handle.hiddenPause) return;
+                rejPlay(err);
+              });
+            } else {
+              resPlay();
+            }
+          };
+          handle.replay();
+        });
+
+        Promise.all([playPromise, framePromise]).then(resolve, reject);
+      });
+    });
+
+    return started.then(function () {
+      if (stale()) throw new Error('stale');
+      handle.deadline.cancel();
+      // Atomic swap: show the new layer and hide the old in the same frame. No crossfade.
+      var prev = state.visible;
+      target.classList.add('is-visible');
+      if (prev && prev !== target) {
+        prev.classList.remove('is-visible');
+        prev.pause();
+      }
+      state.visible = target;
+      handle.revealed = true;
+      state.playback = 'playing';
+
+      return new Promise(function (resolve) {
+        var duration = target.duration;
+        var holdAt = duration - guard;
+        var done = false;
+        function finish() {
+          if (done || stale()) return;
+          done = true;
+          target.pause(); // held on its terminal frame
+          cleanup();
+          resolve();
+        }
+        function tick() {
+          handle.rafId = null;
+          if (stale()) return;
+          if (onProgress) onProgress(target.currentTime, duration);
+          if (target.currentTime >= holdAt) finish();
+          else handle.rafId = window.requestAnimationFrame(tick);
+        }
+        listen('timeupdate', function () { // backup when rAF is throttled
+          if (onProgress) onProgress(target.currentTime, duration);
+          if (target.currentTime >= holdAt) finish();
+        });
+        listen('ended', finish); // fallback only
+        handle.rafId = window.requestAnimationFrame(tick);
+      });
+    }, function (err) {
+      cleanup();
+      target.pause();
+      throw err;
+    });
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    var h = state.pending;
+    if (!h || h.revealed) return;
+    if (document.hidden) {
+      // Frame callbacks freeze in the background — pause the deadline and the pending clip.
+      h.hiddenPause = true;
+      h.deadline.pause();
+      h.video.pause();
+      h.video.currentTime = 0;
+    } else {
+      h.hiddenPause = false;
+      h.deadline.resume();
+      if (h.replay) h.replay();
+    }
+  });
+
+  // ── Transitions ───────────────────────────────────────────────
+  function onControl(btn) {
+    if (state.locked) return;
+    var branch = btn.getAttribute('data-branch');
+    if (state.scene === 'base') forward(btn, branch);
+    else if (state.scene === branch && btn === state.chosen) reverse(btn, branch);
+    // Branch-to-branch is not allowed: Reset must return to base first.
+  }
+
+  function forward(btn, branch) {
+    // Lock synchronously, in the same tick as the click.
+    var hadFocus = document.activeElement === btn;
+    var token = ++state.token;
+    state.locked = true;
+    state.direction = 'forward';
+    state.playback = 'starting';
+    state.chosen = btn;
+    disableAll();
+    hideNotice();
+
+    var cfg = BRANCHES[branch];
+    var target = videos[cfg.fwd];
+    collapseUI(btn);
+    announce('Changing ' + cfg.name.toLowerCase() + '…');
+
+    var titleAt = null;
+    runClip(target, cfg.fwdGuard, token, function (t, d) {
+      if (titleAt === null) titleAt = Math.min(d * 0.12, 0.9);
+      if (t >= titleAt && !stage.classList.contains('title-hidden')) stage.classList.add('title-hidden');
+    }).then(function () {
+      if (token !== state.token) return;
+      state.scene = branch;
+      state.playback = 'ready';
+      stage.classList.add('title-hidden');
+      setResetLabel(btn);
+      setBranchSemantics(btn);
+      btn.disabled = false;
+      state.locked = false;
+      if (hadFocus) btn.focus({ preventScroll: true });
+      announce(cfg.name + ' changed. Press Reset to return.');
+    }, function (err) {
+      if (token !== state.token || (err && err.message === 'stale')) return;
+      // Preserve the last valid frame; reopen the controller at base.
+      state.playback = 'error';
+      state.scene = 'base';
+      state.chosen = null;
+      expandUI(btn, false);
+      btn.classList.remove('chosen');
+      stage.classList.remove('title-hidden');
+      setBranchSemantics(null);
+      state.locked = false;
+      updateAvailability();
+      if (hadFocus && !btn.disabled) btn.focus({ preventScroll: true });
+      showNotice('Couldn’t play the ' + cfg.name.toLowerCase() + ' transition.', function () {
+        if (!state.locked && state.scene === 'base') forward(btn, branch);
+      });
+    });
+  }
+
+  function reverse(btn, branch) {
+    var hadFocus = document.activeElement === btn;
+    var token = ++state.token;
+    state.locked = true;
+    state.direction = 'reverse';
+    state.playback = 'starting';
+    disableAll();
+    hideNotice();
+
+    var cfg = BRANCHES[branch];
+    var target = videos[cfg.rev];
+    announce('Returning to the original look…');
+
+    // Reverse clip and bar expansion start together.
+    restoreOptionLabel(btn, token);
+    expandUI(btn, true);
+    setBranchSemantics(null);
+    disableAll();
+
+    runClip(target, cfg.revGuard, token, null).then(function () {
+      if (token !== state.token) return;
+      state.scene = 'base';
+      state.playback = 'ready';
+      state.chosen = null;
+      btn.classList.remove('chosen');
+      controller.classList.remove('restoring');
+      stage.classList.remove('title-hidden');
+      state.locked = false;
+      updateAvailability();
+      if (hadFocus) btn.focus({ preventScroll: true });
+      announce('Back to the original look.');
+    }, function (err) {
+      if (token !== state.token || (err && err.message === 'stale')) return;
+      // The selected frame is still showing — return the controller to its selected state.
+      state.playback = 'error';
+      var text = btn.querySelector('.cell-text');
+      text.classList.remove('fading', 'returning');
+      controller.classList.remove('restoring');
+      collapseUI(btn);
+      setResetLabel(btn);
+      setBranchSemantics(btn);
+      btn.disabled = false;
+      state.locked = false;
+      if (hadFocus) btn.focus({ preventScroll: true });
+      showNotice('Couldn’t play the reset transition.', function () {
+        if (!state.locked && state.scene === branch) reverse(btn, branch);
+      });
+    });
+  }
+
+  // Keep the travelled label centred in the capsule through resizes.
+  window.addEventListener('resize', function () {
+    if (state.chosen && controller.classList.contains('collapsed')) placeChosenLabel(state.chosen, true);
+  });
+})();
+</script>
+</body>
+</html>
