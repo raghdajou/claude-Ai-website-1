@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image Tunnel</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #080808; overflow: hidden; }
+  #stage { position: fixed; inset: 0; cursor: grab; touch-action: none; user-select: none; }
+  #stage:active { cursor: grabbing; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<div id="stage" role="img" aria-label="A 3D tunnel lined with photos — a garden, a puffin, friends on their phones, wildflowers and lilies — flowing toward the viewer"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var IMAGES = ['images/garden.jpg', 'images/puffin.jpg', 'images/phones.jpg', 'images/wildflowers.jpg', 'images/lilies.jpg'];
+
+  var RADIUS = 8;            // tunnel radius
+  var FRAMES = 10;           // panels around each ring
+  var RINGS = 12;            // rings along the tunnel
+  var SPACING = 5;           // ring depth
+  var DEPTH = RINGS * SPACING;
+  var SPEED = 6;             // units per second → one full loop every DEPTH / SPEED = 10s
+  var BG = 0x080808, GRID = 0x3a3a3a;
+
+  var capture = /[?&]capture/.test(location.search);
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var stage = document.getElementById('stage');
+
+  var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: capture });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(BG); // the clear colour is shown as-is, so no conversion
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  stage.appendChild(renderer.domElement);
+
+  var scene = new THREE.Scene();
+  // Colours are converted to linear space so they match on screen with sRGB output.
+  scene.fog = new THREE.Fog(new THREE.Color(BG).convertSRGBToLinear(), 18, DEPTH - 4); // far rings fade into the dark
+  var camera = new THREE.PerspectiveCamera(85, 1, 0.1, 300);
+
+  function resize() {
+    var w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // One curved panel shape, reused by every photo tile.
+  var arc = (2 * Math.PI) / FRAMES;
+  var tileGeo = new THREE.CylinderGeometry(RADIUS, RADIUS, SPACING * 0.97, 16, 1, true, Math.PI / 2, arc);
+  tileGeo.applyMatrix4(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+  var lineMat = new THREE.LineBasicMaterial({ color: new THREE.Color(GRID).convertSRGBToLinear() });
+
+  // Seeded random so the layout is identical on every load (and in exported video).
+  var seed = 137;
+  function rand() { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; }
+
+  // Checkerboard of photo slots, with a few left empty so it feels less mechanical.
+  var slots = [];
+  for (var r = 0; r < RINGS; r++) {
+    slots.push([]);
+    for (var f = 0; f < FRAMES; f++) slots[r].push((r + f) % 2 === 0 && rand() > 0.22);
+  }
+
+  function buildRing(ri, textures) {
+    var group = new THREE.Group();
+    for (var fi = 0; fi < FRAMES; fi++) {
+      var angle = (fi / FRAMES) * Math.PI * 2;
+      if (slots[ri][fi]) {
+        // Neighbouring tiles never repeat the same photo.
+        var tex = textures[(ri * 2 + fi * 3) % textures.length];
+        var mesh = new THREE.Mesh(tileGeo, new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide }));
+        mesh.rotation.z = angle;
+        mesh.position.z = -SPACING / 2;
+        group.add(mesh);
+      }
+      var lx = Math.cos(angle) * (RADIUS + 0.05), ly = Math.sin(angle) * (RADIUS + 0.05);
+      group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(lx, ly, 0), new THREE.Vector3(lx, ly, -SPACING)
+      ]), lineMat));
+    }
+    var pts = [];
+    for (var s = 0; s <= 120; s++) {
+      var a = (s / 120) * Math.PI * 2;
+      pts.push(new THREE.Vector3(Math.cos(a) * (RADIUS + 0.05), Math.sin(a) * (RADIUS + 0.05), 0));
+    }
+    group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat));
+    return group;
+  }
+
+  var rings = [];
+  function place(offset) {
+    for (var i = 0; i < rings.length; i++) {
+      var z = -(i * SPACING) + offset;
+      z = ((z - 2) % DEPTH + DEPTH) % DEPTH - DEPTH + 2; // wrap into (2 - DEPTH, 2]
+      rings[i].position.z = z;
+    }
+  }
+
+  // ── Interaction (live mode): drag or scroll to fly forward/back ──
+  var extra = 0, vel = 0, dragging = false, lastY = 0, pending = 0;
+  stage.addEventListener('pointerdown', function (e) {
+    dragging = true; lastY = e.clientY; vel = 0; stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    pending += -(e.clientY - lastY) * 0.05; lastY = e.clientY;
+  });
+  function endDrag() { dragging = false; }
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+  stage.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    vel = Math.max(-40, Math.min(40, vel + e.deltaY * 0.06));
+  }, { passive: false });
+
+  function start(textures) {
+    for (var ri = 0; ri < RINGS; ri++) {
+      var g = buildRing(ri, textures);
+      scene.add(g);
+      rings.push(g);
+    }
+
+    if (capture) {
+      // Exact frames on demand for video export.
+      window.__render = function (t) { place(t * SPEED); renderer.render(scene, camera); };
+      window.__loop = DEPTH / SPEED;
+      window.__ready = true;
+      return;
+    }
+
+    var last = performance.now(), base = 0;
+    (function tick(now) {
+      var dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      if (!reducedMotion && !dragging) base += SPEED * dt;
+      extra += pending; pending = 0;
+      vel *= Math.pow(0.08, dt);
+      extra += vel * dt;
+      place(base + extra);
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    })(last);
+  }
+
+  // Load all photos, then build the tunnel.
+  var loader = new THREE.TextureLoader();
+  var textures = [], loaded = 0;
+  IMAGES.forEach(function (src, i) {
+    loader.load(src, function (tex) {
+      tex.encoding = THREE.sRGBEncoding;
+      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      textures[i] = tex;
+      if (++loaded === IMAGES.length) start(textures);
+    });
+  });
+})();
+</script>
+</body>
+</html>
