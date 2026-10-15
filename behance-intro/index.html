@@ -156,7 +156,7 @@ body {
   var START_FROM_WORD = 5;      // first 4 words are shown at full strength
   var INITIAL_OPACITY = 0.2;
   var DELAY = 1.0;              // seconds before the reveal starts
-  var REVEAL = 7.5;             // seconds for the whole paragraph to reveal
+  var REVEAL = 13;              // seconds for the whole paragraph to reveal (~0.22s per word)
   var HOLD = 3.0;               // seconds the finished slide is held (for the loop)
   var OVERLAP = 4;              // each word's fade spans this many word-slots, so fades flow together
   var TOTAL = DELAY + REVEAL + HOLD;
@@ -189,13 +189,13 @@ body {
   fit();
   window.addEventListener('resize', fit);
 
-  function easeInOut(x) { return 0.5 - 0.5 * Math.cos(Math.PI * x); }
   function smooth(x) { return x * x * (3 - 2 * x); }
 
   // Word opacity at time t. Same idea as the component (first words full, the rest
   // fade up in order), but eased overall and with overlapping, softened fades.
   function render(t) {
-    var progress = easeInOut(Math.max(0, Math.min(1, (t - DELAY) / REVEAL)));
+    // Steady, linear pace: no speed-up in the middle of the paragraph.
+    var progress = Math.max(0, Math.min(1, (t - DELAY) / REVEAL));
     var toAnimate = words.length - (START_FROM_WORD - 1);
     var slots = toAnimate + OVERLAP - 1; // room for the last word's fade to finish
     for (var i = 0; i < spans.length; i++) {
