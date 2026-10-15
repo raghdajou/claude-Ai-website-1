@@ -158,6 +158,7 @@ export default function CinemaCarousel({ slides = SLIDES, startSlide = 1 }: { sl
                   alt={slide.alt}
                   draggable={false}
                   className="pointer-events-none block h-full w-full select-none object-cover"
+                  style={{ objectPosition: slide.focus ?? "center" }}
                 />
               </div>
               <div
