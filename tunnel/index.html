@@ -45,7 +45,11 @@
     { src: 'images/pink-dahlia.jpg',     rgb: [224, 161, 139] },
     { src: 'images/swan.jpg',            rgb: [131, 169, 165] },
     { src: 'images/snake-portrait.jpg',  rgb: [106, 130, 82] },
-    { src: 'images/pale-orchid.jpg',     rgb: [186, 185, 173] }
+    { src: 'images/pale-orchid.jpg',     rgb: [186, 185, 173] },
+    { src: 'images/mustard-portrait.jpg', rgb: [117, 78, 36] },
+    { src: 'images/sunflowers.jpg',      rgb: [106, 125, 111] },
+    { src: 'images/green-glitch.jpg',    rgb: [197, 205, 187] },
+    { src: 'images/petal-macro.jpg',     rgb: [153, 136, 110] }
   ];
   var IMAGES = PHOTOS.map(function (p) { return p.src; });
 
@@ -100,7 +104,7 @@
 
   // ── Arrange photos ──────────────────────────────────────────
   // Rules, in priority order:
-  //  1. The same photo never appears within 2 frames around or 2 rings in front/behind
+  //  1. The same photo never appears within 3 frames around or 3 rings in front/behind
   //     (rings wrap, since the tunnel loops).
   //  2. Every photo is used about the same number of times.
   //  3. Among the rest, pick the photo whose colour differs most from its nearby panels.
@@ -127,7 +131,7 @@
             var q = assigned[r2][f2];
             if (q < 0) continue;
             var rd = ringDist(ri0, r2), fd = frameDist(fi0, f2);
-            if (q === p && rd <= 2 && fd <= 2) { clash = true; break; }
+            if (q === p && rd <= 3 && fd <= 3) { clash = true; break; }
             if (rd <= 1 && fd <= 2) nearest = Math.min(nearest, colourDist(PHOTOS[p].rgb, PHOTOS[q].rgb));
           }
         }
