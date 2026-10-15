@@ -155,9 +155,10 @@ body {
   // Same settings as the Framer TextFluxUnveil defaults, driven by time instead of scroll.
   var START_FROM_WORD = 5;      // first 4 words are shown at full strength
   var INITIAL_OPACITY = 0.2;
-  var DELAY = 0.8;              // seconds before the reveal starts
-  var REVEAL = 5.2;             // seconds for the whole paragraph to reveal
-  var HOLD = 2.5;               // seconds the finished slide is held (for the loop)
+  var DELAY = 1.0;              // seconds before the reveal starts
+  var REVEAL = 7.5;             // seconds for the whole paragraph to reveal
+  var HOLD = 3.0;               // seconds the finished slide is held (for the loop)
+  var OVERLAP = 4;              // each word's fade spans this many word-slots, so fades flow together
   var TOTAL = DELAY + REVEAL + HOLD;
 
   var slide = document.getElementById('slide');
@@ -188,18 +189,21 @@ body {
   fit();
   window.addEventListener('resize', fit);
 
-  // Word opacity for a given reveal progress (0–1), mirroring the component's maths.
+  function easeInOut(x) { return 0.5 - 0.5 * Math.cos(Math.PI * x); }
+  function smooth(x) { return x * x * (3 - 2 * x); }
+
+  // Word opacity at time t. Same idea as the component (first words full, the rest
+  // fade up in order), but eased overall and with overlapping, softened fades.
   function render(t) {
-    var progress = Math.max(0, Math.min(1, (t - DELAY) / REVEAL));
+    var progress = easeInOut(Math.max(0, Math.min(1, (t - DELAY) / REVEAL)));
     var toAnimate = words.length - (START_FROM_WORD - 1);
+    var slots = toAnimate + OVERLAP - 1; // room for the last word's fade to finish
     for (var i = 0; i < spans.length; i++) {
       var o = 1;
       if (i + 1 >= START_FROM_WORD) {
-        var start = (i - (START_FROM_WORD - 1)) / toAnimate;
-        var end = (i - (START_FROM_WORD - 1) + 1) / toAnimate;
-        if (progress >= end) o = 1;
-        else if (progress > start) o = INITIAL_OPACITY + (1 - INITIAL_OPACITY) * (progress - start) / (end - start);
-        else o = INITIAL_OPACITY;
+        var start = (i - (START_FROM_WORD - 1)) / slots;
+        var local = Math.max(0, Math.min(1, (progress - start) / (OVERLAP / slots)));
+        o = INITIAL_OPACITY + (1 - INITIAL_OPACITY) * smooth(local);
       }
       spans[i].style.setProperty('--o', o.toFixed(3));
     }
