@@ -18,11 +18,28 @@
 (function () {
   'use strict';
 
-  var IMAGES = [
-    'images/garden.jpg', 'images/car.jpg', 'images/puffin.jpg', 'images/vase-flowers.jpg', 'images/phones.jpg',
-    'images/yellow-lilies.jpg', 'images/wildflowers.jpg', 'images/portrait.jpg', 'images/lilies.jpg', 'images/picnic.jpg',
-    'images/yellow-blur.jpg', 'images/pressed-flowers.jpg', 'images/beach.jpg', 'images/green-leaves.jpg'
+  // Each photo with its average colour (measured from the image), used to balance colours.
+  var PHOTOS = [
+    { src: 'images/garden.jpg',          rgb: [61, 94, 51] },
+    { src: 'images/car.jpg',             rgb: [126, 68, 43] },
+    { src: 'images/puffin.jpg',          rgb: [153, 165, 101] },
+    { src: 'images/vase-flowers.jpg',    rgb: [146, 129, 147] },
+    { src: 'images/phones.jpg',          rgb: [113, 112, 103] },
+    { src: 'images/yellow-lilies.jpg',   rgb: [192, 190, 135] },
+    { src: 'images/wildflowers.jpg',     rgb: [114, 127, 101] },
+    { src: 'images/portrait.jpg',        rgb: [117, 105, 99] },
+    { src: 'images/lilies.jpg',          rgb: [195, 130, 123] },
+    { src: 'images/picnic.jpg',          rgb: [161, 159, 147] },
+    { src: 'images/yellow-blur.jpg',     rgb: [172, 153, 59] },
+    { src: 'images/pressed-flowers.jpg', rgb: [144, 124, 107] },
+    { src: 'images/beach.jpg',           rgb: [174, 194, 175] },
+    { src: 'images/green-leaves.jpg',    rgb: [117, 140, 71] },
+    { src: 'images/pastel-blur.jpg',     rgb: [177, 169, 172] },
+    { src: 'images/orange-petals.jpg',   rgb: [216, 82, 10] },
+    { src: 'images/pink-swirl.jpg',      rgb: [203, 156, 172] },
+    { src: 'images/pink-ice.jpg',        rgb: [211, 194, 242] }
   ];
+  var IMAGES = PHOTOS.map(function (p) { return p.src; });
 
   var RADIUS = 8;            // tunnel radius
   var FRAMES = 10;           // panels around each ring
@@ -73,14 +90,54 @@
     for (var f = 0; f < FRAMES; f++) slots[r].push((r + f) % 2 === 0 && rand() > 0.22);
   }
 
+  // ── Arrange photos ──────────────────────────────────────────
+  // Rules, in priority order:
+  //  1. The same photo never appears within 2 frames around or 2 rings in front/behind
+  //     (rings wrap, since the tunnel loops).
+  //  2. Every photo is used about the same number of times.
+  //  3. Among the rest, pick the photo whose colour differs most from its nearby panels.
+  function ringDist(a, b) { var d = Math.abs(a - b) % RINGS; return Math.min(d, RINGS - d); }
+  function frameDist(a, b) { var d = Math.abs(a - b) % FRAMES; return Math.min(d, FRAMES - d); }
+  function colourDist(a, b) {
+    var dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2];
+    return Math.sqrt(2 * dr * dr + 4 * dg * dg + 3 * db * db); // weighted for how eyes see colour
+  }
+
+  var assigned = [], uses = PHOTOS.map(function () { return 0; });
+  for (var ar = 0; ar < RINGS; ar++) {
+    assigned.push([]);
+    for (var af = 0; af < FRAMES; af++) assigned[ar].push(-1);
+  }
+  for (var ri0 = 0; ri0 < RINGS; ri0++) {
+    for (var fi0 = 0; fi0 < FRAMES; fi0++) {
+      if (!slots[ri0][fi0]) continue;
+      var best = -1, bestScore = -Infinity;
+      for (var p = 0; p < PHOTOS.length; p++) {
+        var clash = false, nearest = Infinity;
+        for (var r2 = 0; r2 < RINGS && !clash; r2++) {
+          for (var f2 = 0; f2 < FRAMES; f2++) {
+            var q = assigned[r2][f2];
+            if (q < 0) continue;
+            var rd = ringDist(ri0, r2), fd = frameDist(fi0, f2);
+            if (q === p && rd <= 2 && fd <= 2) { clash = true; break; }
+            if (rd <= 1 && fd <= 2) nearest = Math.min(nearest, colourDist(PHOTOS[p].rgb, PHOTOS[q].rgb));
+          }
+        }
+        if (clash) continue;
+        var score = -uses[p] * 1000 + (nearest === Infinity ? 500 : nearest);
+        if (score > bestScore) { bestScore = score; best = p; }
+      }
+      assigned[ri0][fi0] = best;
+      uses[best]++;
+    }
+  }
+
   function buildRing(ri, textures) {
     var group = new THREE.Group();
-    var k = 0; // photo counter within this ring
     for (var fi = 0; fi < FRAMES; fi++) {
       var angle = (fi / FRAMES) * Math.PI * 2;
       if (slots[ri][fi]) {
-        // Each ring cycles through every photo, shifted per ring, so neighbours differ.
-        var tex = textures[(ri * 2 + k++) % textures.length];
+        var tex = textures[assigned[ri][fi]];
         var mesh = new THREE.Mesh(tileGeo, new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide }));
         mesh.rotation.z = angle;
         mesh.position.z = -SPACING / 2;
@@ -136,6 +193,7 @@
     if (capture) {
       // Exact frames on demand for video export.
       window.__render = function (t) { place(t * SPEED); renderer.render(scene, camera); };
+      window.__layout = { assigned: assigned, uses: uses };
       window.__loop = DEPTH / SPEED;
       window.__ready = true;
       return;
