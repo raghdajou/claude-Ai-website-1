@@ -5,20 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Image Tunnel</title>
 <style>
-  html, body { margin: 0; height: 100%; background: #080808; overflow: hidden; }
+  html, body { margin: 0; height: 100%; background: #f3f1ec; overflow: hidden; }
   #stage { position: fixed; inset: 0; cursor: grab; touch-action: none; user-select: none; }
   #stage:active { cursor: grabbing; }
   canvas { display: block; }
 </style>
 </head>
 <body>
-<div id="stage" role="img" aria-label="A 3D tunnel lined with photos — a garden, a puffin, friends on their phones, wildflowers and lilies — flowing toward the viewer"></div>
+<div id="stage" role="img" aria-label="A 3D tunnel lined with photos — a garden, a puffin, friends on their phones, wildflowers, lilies and a picnic — flowing toward the viewer"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function () {
   'use strict';
 
-  var IMAGES = ['images/garden.jpg', 'images/puffin.jpg', 'images/phones.jpg', 'images/wildflowers.jpg', 'images/lilies.jpg'];
+  var IMAGES = ['images/garden.jpg', 'images/puffin.jpg', 'images/phones.jpg', 'images/wildflowers.jpg', 'images/lilies.jpg', 'images/picnic.jpg'];
 
   var RADIUS = 8;            // tunnel radius
   var FRAMES = 10;           // panels around each ring
@@ -26,7 +26,7 @@
   var SPACING = 5;           // ring depth
   var DEPTH = RINGS * SPACING;
   var SPEED = 6;             // units per second → one full loop every DEPTH / SPEED = 10s
-  var BG = 0x080808, GRID = 0x3a3a3a;
+  var BG = 0xf3f1ec, GRID = 0xc9c4ba; // light mode: warm off-white with soft grey lines
 
   var capture = /[?&]capture/.test(location.search);
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -71,11 +71,12 @@
 
   function buildRing(ri, textures) {
     var group = new THREE.Group();
+    var k = 0; // photo counter within this ring
     for (var fi = 0; fi < FRAMES; fi++) {
       var angle = (fi / FRAMES) * Math.PI * 2;
       if (slots[ri][fi]) {
-        // Neighbouring tiles never repeat the same photo.
-        var tex = textures[(ri * 2 + fi * 3) % textures.length];
+        // Each ring cycles through every photo, shifted per ring, so neighbours differ.
+        var tex = textures[(ri * 2 + k++) % textures.length];
         var mesh = new THREE.Mesh(tileGeo, new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide }));
         mesh.rotation.z = angle;
         mesh.position.z = -SPACING / 2;
