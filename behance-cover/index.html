@@ -1,0 +1,28 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  html,body{margin:0;background:#2d4a1c}
+  .scene{position:relative;width:1600px;height:1200px;overflow:hidden;
+    background:url(bg.jpg) center 40%/cover;}
+  /* soft depth-of-field + light falloff so the monitor pops */
+  .scene::before{content:'';position:absolute;inset:0;
+    background:radial-gradient(70% 60% at 50% 45%,rgba(0,0,0,0) 40%,rgba(10,25,5,.35) 100%);}
+  .monitor{position:absolute;left:50%;top:150px;transform:translateX(-50%);width:1400px;}
+  .frame{position:relative;width:1400px;height:900px;border-radius:22px;padding:7px;
+    background:linear-gradient(180deg,#e9eaec 0%,#c9cbcf 45%,#a8abb0 100%);
+    box-shadow:0 60px 90px rgba(0,0,0,.45),0 18px 30px rgba(0,0,0,.35),
+      inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(0,0,0,.25);}
+  .bezel{width:100%;height:100%;border-radius:16px;background:#0c0c0d;padding:22px;box-sizing:border-box}
+  .screen{position:relative;width:100%;height:100%;border-radius:4px;overflow:hidden;background:#fafafa;
+    background-image:url(screen.jpg);background-size:100% auto;background-position:top center;background-repeat:no-repeat}
+  /* glass reflection */
+  .screen::after{content:'';position:absolute;inset:0;
+    background:linear-gradient(118deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 28%,rgba(255,255,255,0) 42%);}
+  .neck{position:relative;margin:-2px auto 0;width:290px;height:200px;
+    background:linear-gradient(90deg,#9ea1a6 0%,#d9dbde 18%,#eceef0 50%,#d2d4d7 82%,#94979c 100%);
+    box-shadow:inset 0 14px 18px rgba(0,0,0,.28);}
+</style></head>
+<body><div class="scene"><div class="monitor">
+  <div class="frame"><div class="bezel"><div class="screen"></div></div></div>
+  <div class="neck"></div>
+</div></div></body></html>
