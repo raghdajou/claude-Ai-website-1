@@ -42,7 +42,7 @@ body { display: grid; place-items: center; overflow: hidden; }
     noise: ['*', '#', '%', '+', '-', '.', '░', '▒']
   };
   var SWAP = 0.05, STAGGER = 0.02, VIEW_H = 675;
-  var LEAD = 0.3, PAUSE = 1.8, SCROLL = 1.3, END_HOLD = 2.0;
+  var LEAD = 0.3, PAUSE = 1.8, SCROLL = 2.6, END_HOLD = 2.0;   // slow, even scroll between phrases
 
   var page = document.getElementById('page');
   var blocks = SECTIONS.map(function (s, si) {
@@ -76,7 +76,7 @@ body { display: grid; place-items: center; overflow: hidden; }
   for (var k = 1; k < stops.length; k++) { keys.push({ from: stops[k - 1], to: stops[k], start: t }); t += SCROLL + blocks[k].dur + PAUSE; }
   var TOTAL = t - PAUSE + END_HOLD;
 
-  function ease(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+  function ease(x) { return -(Math.cos(Math.PI * x) - 1) / 2; }   // gentle sine ease in and out
   function scrollAt(time) {
     var y = 0;
     keys.forEach(function (kf) { if (time >= kf.start) y = kf.from + (kf.to - kf.from) * ease(Math.min(1, (time - kf.start) / SCROLL)); });
