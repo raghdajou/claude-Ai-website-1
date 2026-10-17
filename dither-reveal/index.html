@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dither Reveal Artboard</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&family=Inter:wght@300;400;500;700&family=DM+Sans:wght@300;400;500;700&family=Instrument+Serif&family=Playfair+Display:wght@400;600;700&family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: settings panel on the left, the Behance artboard scaled to fit on the right; stacks on phones. */
+:root {
+  --bg: #f1f2ee;
+  --panel: #ffffff;
+  --ink: #16180f;
+  --muted: #6a6e60;
+  --line: #dfe1d8;
+  --field: #f6f7f3;
+  --accent: #3d4a12;
+  --accent-ink: #f4f9dd;
+  --font-ui: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12130f; --panel: #1b1d17; --ink: #ecefe2; --muted: #9a9f8c; --line: #2d3026;
+    --field: #23261e; --accent: #d6ec7a; --accent-ink: #1a1f05; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12130f; --panel: #1b1d17; --ink: #ecefe2; --muted: #9a9f8c; --line: #2d3026;
+  --field: #23261e; --accent: #d6ec7a; --accent-ink: #1a1f05; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 14px/1.45 var(--font-ui);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 32px;
+}
+.app {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  gap: 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  header.top { order: -2; }
+  .stage-wrap { order: -1; position: static; }
+}
+
+header.top { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between; }
+header.top h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+header.top p { margin: 0; color: var(--muted); max-width: 62ch; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 4px 16px 16px;
+  min-width: 0;
+}
+.panel section { display: grid; gap: 10px; padding-block: 14px; border-bottom: 1px solid var(--line); }
+.panel section:last-child { border-bottom: 0; }
+.panel h2 {
+  margin: 0;
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0; }
+label > span { display: flex; justify-content: space-between; gap: 8px; }
+label output { font-family: var(--font-mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+input[type=text], input[type=number], textarea, select {
+  width: 100%;
+  font: 400 13px/1.4 var(--font-ui);
+  color: var(--ink);
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 9px;
+  min-width: 0;
+}
+textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
+input[type=color] {
+  width: 100%; height: 34px; padding: 2px; border: 1px solid var(--line);
+  border-radius: 8px; background: var(--field); cursor: pointer;
+}
+input[type=range] { width: 100%; accent-color: var(--accent); }
+:is(input, textarea, select, button):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.check { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 13px; }
+.hint { margin: 0; font-size: 12px; color: var(--muted); }
+
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+button {
+  font: 500 13px/1 var(--font-ui);
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+}
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+.stage-wrap { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 10px; min-width: 0; }
+.stage-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.stage-bar .meta { font: 400 12px/1 var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.stage {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 12px 32px -12px rgba(20,24,8,.25);
+}
+
+/* The artboard is laid out at its real pixel size and scaled to fit the stage. */
+.artboard {
+  position: absolute;
+  left: 0; top: 0;
+  transform-origin: 0 0;
+  display: flex;
+  overflow: hidden;
+}
+.reveal { width: 100%; display: flex; flex-direction: column; }
+.reveal .line { white-space: pre-wrap; word-break: break-word; min-height: 1em; }
+.reveal .w { white-space: nowrap; }
+/* Each character keeps its real letter for layout, so nothing shifts while it scrambles;
+   the flickering glyph is drawn over it. Hidden characters keep their space. */
+.reveal .c { position: relative; }
+.reveal .c.s, .reveal .c.h { color: transparent; }
+.reveal .c.s::after {
+  content: attr(data-g);
+  position: absolute;
+  left: 50%; top: 0;
+  transform: translateX(-50%);
+  color: var(--scramble);
+}
+.capture body, .capture { background: transparent; }
+.capture body { padding: 0; }
+.capture .app > :not(.stage-wrap), .capture .stage-bar { display: none; }
+.capture .app { display: block; max-width: none; }
+.capture .stage { border-radius: 0; box-shadow: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal .c.s, .reveal .c.h { color: inherit; }
+  .reveal .c.s::after { content: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <h1>Dither Reveal Artboard</h1>
+    <p>Type your content, pick the artboard size and tune the reveal. The preview is a Behance-width artboard at its real pixel size, scaled to fit.</p>
+  </header>
+
+  <form class="panel" id="controls" autocomplete="off">
+    <section>
+      <h2>Content</h2>
+      <label for="text"><span>Text <em>Enter = new line</em></span>
+        <textarea id="text" name="text">Most dashboards show you data. Foxltics reads it, then tells you what it means, what comes next, and exactly what to do about it.
+A full-scale HR management system built around an AI assistant that thinks alongside the people who run your workforce.</textarea>
+      </label>
+    </section>
+
+    <section>
+      <h2>Artboard</h2>
+      <label for="preset"><span>Size</span>
+        <select id="preset">
+          <option value="1400x788">Behance 16:9 · 1400 × 788</option>
+          <option value="1400x1050">Behance 4:3 · 1400 × 1050</option>
+          <option value="1400x1400">Behance square · 1400 × 1400</option>
+          <option value="1400x1750">Behance 4:5 · 1400 × 1750</option>
+          <option value="1920x1080">Full HD · 1920 × 1080</option>
+          <option value="custom">Custom</option>
+        </select>
+      </label>
+      <div class="row">
+        <label for="aw"><span>Width</span><input type="number" id="aw" min="200" max="4000" step="10" value="1400"></label>
+        <label for="ah"><span>Height</span><input type="number" id="ah" min="200" max="6000" step="10" value="788"></label>
+      </div>
+      <div class="row">
+        <label for="bg"><span>Background</span><input type="color" id="bg" value="#ffffff"></label>
+        <label for="pad"><span>Padding <output id="padOut"></output></span><input type="range" id="pad" min="0" max="300" step="4" value="112"></label>
+      </div>
+      <div class="row">
+        <label for="align"><span>Alignment</span>
+          <select id="align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select>
+        </label>
+        <label for="valign"><span>Vertical</span>
+          <select id="valign"><option value="flex-start">Top</option><option value="center" selected>Middle</option><option value="flex-end">Bottom</option></select>
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>Type</h2>
+      <label for="font"><span>Font</span>
+        <select id="font">
+          <option>Urbanist</option><option>Inter</option><option>DM Sans</option><option>Instrument Serif</option>
+          <option>Playfair Display</option><option>Space Mono</option><option>IBM Plex Mono</option>
+        </select>
+      </label>
+      <div class="row">
+        <label for="size"><span>Size <output id="sizeOut"></output></span><input type="range" id="size" min="12" max="160" step="1" value="40"></label>
+        <label for="weight"><span>Weight</span>
+          <select id="weight"><option value="300">Light</option><option value="400" selected>Regular</option><option value="500">Medium</option><option value="600">Semibold</option><option value="700">Bold</option></select>
+        </label>
+      </div>
+      <div class="row">
+        <label for="lh"><span>Line height <output id="lhOut"></output></span><input type="range" id="lh" min="0.9" max="2" step="0.05" value="1.25"></label>
+        <label for="ls"><span>Letter spacing <output id="lsOut"></output></span><input type="range" id="ls" min="-0.06" max="0.2" step="0.005" value="-0.01"></label>
+      </div>
+      <div class="row">
+        <label for="textColor"><span>Text color</span><input type="color" id="textColor" value="#111111"></label>
+        <label for="scrambleColor"><span>Scramble color</span><input type="color" id="scrambleColor" value="#999999"></label>
+      </div>
+    </section>
+
+    <section>
+      <h2>Reveal</h2>
+      <div class="row">
+        <label for="charset"><span>Glyph set</span>
+          <select id="charset">
+            <option value="dither">Dither ░▒▓█</option><option value="binary">Binary 01</option>
+            <option value="blocks">Blocks ▖▘▝</option><option value="noise">Noise *#%</option><option value="custom">Custom</option>
+          </select>
+        </label>
+        <label for="order"><span>Reveal order</span>
+          <select id="order"><option value="left">Left to right</option><option value="right">Right to left</option><option value="center">From center</option><option value="random">Random</option></select>
+        </label>
+      </div>
+      <label for="customChars" id="customWrap" hidden><span>Custom characters</span><input type="text" id="customChars" value="#%&amp;$?"></label>
+      <div class="row">
+        <label for="startDelay"><span>Start delay <output id="startDelayOut"></output></span><input type="range" id="startDelay" min="0" max="5" step="0.1" value="0.4"></label>
+        <label for="stagger"><span>Stagger / char <output id="staggerOut"></output></span><input type="range" id="stagger" min="0" max="0.2" step="0.002" value="0.02"></label>
+      </div>
+      <div class="row">
+        <label for="duration"><span>Scramble time <output id="durationOut"></output></span><input type="range" id="duration" min="0.05" max="3" step="0.05" value="0.4"></label>
+        <label for="flicker"><span>Flicker speed <output id="flickerOut"></output></span><input type="range" id="flicker" min="0.02" max="0.3" step="0.01" value="0.05"></label>
+      </div>
+      <label for="startHidden" class="check"><input type="checkbox" id="startHidden"> Hide text until its turn (otherwise it starts as glyphs)</label>
+      <label for="loop" class="check"><input type="checkbox" id="loop" checked> Loop, holding the finished text for <input type="number" id="hold" min="0" max="20" step="0.5" value="2.5" style="width:64px"> s</label>
+    </section>
+
+    <section>
+      <h2>Export</h2>
+      <p class="hint">Copy the settings and send them to Claude to get this exact artboard back as an MP4, GIF and still PNG for Behance.</p>
+      <div class="btns">
+        <button type="button" class="primary" id="copy">Copy settings</button>
+        <button type="button" id="reset">Reset</button>
+      </div>
+      <p class="hint" id="copyNote" role="status"></p>
+      <textarea id="settingsOut" rows="4" hidden readonly></textarea>
+    </section>
+  </form>
+
+  <div class="stage-wrap">
+    <div class="stage-bar">
+      <span class="meta" id="meta"></span>
+      <button type="button" class="primary" id="replay">Replay</button>
+    </div>
+    <div class="stage" id="stage">
+      <div class="artboard" id="artboard"><div class="reveal" id="reveal" aria-live="off"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // Same options and behaviour as the Framer "Dither Reveal" component, laid out on a
+  // fixed-size artboard so it can be exported frame by frame for a Behance project.
+  var CHARSETS = {
+    dither: ['░', '▒', '▓', '█'],
+    binary: ['0', '1'],
+    blocks: ['▖', '▘', '▝', '▗', '▚', '▞', '▛', '▜', '▟', '▙'],
+    noise: ['*', '#', '%', '+', '-', '.', '░', '▒']
+  };
+  var form = document.getElementById('controls');
+  var $ = function (id) { return document.getElementById(id); };
+  var ids = ['text', 'preset', 'aw', 'ah', 'bg', 'pad', 'align', 'valign', 'font', 'size', 'weight', 'lh', 'ls',
+    'textColor', 'scrambleColor', 'charset', 'customChars', 'order', 'startDelay', 'stagger', 'duration',
+    'flicker', 'startHidden', 'loop', 'hold'];
+  var defaults = read();
+
+  function read() {
+    var s = {};
+    ids.forEach(function (id) { var el = $(id); s[id] = el.type === 'checkbox' ? el.checked : el.value; });
+    return s;
+  }
+  function write(s) {
+    ids.forEach(function (id) {
+      if (!(id in s)) return;
+      var el = $(id);
+      if (el.type === 'checkbox') el.checked = !!s[id]; else el.value = s[id];
+    });
+  }
+
+  var stage = $('stage'), artboard = $('artboard'), reveal = $('reveal');
+  var chars = [], startAt = [], lockAt = [], pool = [], revealEnd = 0, cfg = null;
+
+  // Small seeded generator so random order and glyphs repeat exactly between preview and export.
+  function hash(a, b) {
+    var h = Math.imul(a + 1, 2654435761) ^ Math.imul(b + 1, 40503);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return (h ^ (h >>> 16)) >>> 0;
+  }
+
+  function build() {
+    cfg = read();
+    var w = Math.max(200, +cfg.aw), h = Math.max(200, +cfg.ah);
+    artboard.style.width = w + 'px';
+    artboard.style.height = h + 'px';
+    artboard.style.background = cfg.bg;
+    artboard.style.padding = cfg.pad + 'px';
+    artboard.style.alignItems = cfg.valign;
+    reveal.style.fontFamily = "'" + cfg.font + "', system-ui, sans-serif";
+    reveal.style.fontSize = cfg.size + 'px';
+    reveal.style.fontWeight = cfg.weight;
+    reveal.style.lineHeight = cfg.lh;
+    reveal.style.letterSpacing = cfg.ls + 'em';
+    reveal.style.color = cfg.textColor;
+    reveal.style.setProperty('--scramble', cfg.scrambleColor);
+    reveal.style.textAlign = cfg.align;
+    reveal.style.alignItems = { left: 'flex-start', center: 'center', right: 'flex-end' }[cfg.align];
+    $('customWrap').hidden = cfg.charset !== 'custom';
+    pool = cfg.charset === 'custom' && cfg.customChars ? Array.from(cfg.customChars) : CHARSETS[cfg.charset] || CHARSETS.dither;
+
+    // Lines -> words -> character spans. Spaces stay plain text so lines still wrap between words.
+    var text = cfg.text.replace(/\\n/g, '\n');
+    reveal.setAttribute('aria-label', text);
+    reveal.textContent = '';
+    chars = [];
+    text.split('\n').forEach(function (line) {
+      var row = document.createElement('div');
+      row.className = 'line';
+      row.setAttribute('aria-hidden', 'true');
+      line.split(/( +)/).forEach(function (part) {
+        if (!part) return;
+        if (/^ +$/.test(part)) { row.appendChild(document.createTextNode(part)); return; }
+        var word = document.createElement('span');
+        word.className = 'w';
+        Array.from(part).forEach(function (ch) {
+          var c = document.createElement('span');
+          c.className = 'c';
+          c.textContent = ch;
+          word.appendChild(c);
+          chars.push(c);
+        });
+        row.appendChild(word);
+      });
+      reveal.appendChild(row);
+    });
+
+    // Reveal order across the whole text, as in the component.
+    var n = chars.length, order = [];
+    for (var i = 0; i < n; i++) order.push(i);
+    if (cfg.order === 'right') order.reverse();
+    else if (cfg.order === 'center') { var mid = (n - 1) / 2; order.sort(function (a, b) { return Math.abs(a - mid) - Math.abs(b - mid); }); }
+    else if (cfg.order === 'random') order.sort(function (a, b) { return hash(a, 7) - hash(b, 7); });
+    startAt = new Array(n); lockAt = new Array(n);
+    order.forEach(function (idx, pos) {
+      startAt[idx] = +cfg.startDelay + pos * +cfg.stagger;
+      lockAt[idx] = startAt[idx] + +cfg.duration;
+    });
+    revealEnd = n ? Math.max.apply(null, lockAt) : 0;
+
+    $('meta').textContent = w + ' × ' + h + ' px · ' + n + ' characters · ' + revealEnd.toFixed(1) + ' s reveal';
+    ['pad', 'size', 'lh', 'ls', 'startDelay', 'stagger', 'duration', 'flicker'].forEach(function (id) {
+      var v = +cfg[id], unit = { pad: ' px', size: ' px', ls: ' em', lh: '' }[id];
+      $(id + 'Out').textContent = unit === undefined ? v + ' s' : v + unit;
+    });
+    fit();
+  }
+
+  function fit() {
+    var w = +cfg.aw, h = +cfg.ah;
+    var scale = document.documentElement.classList.contains('capture') ? 1 : stage.clientWidth / w;
+    artboard.style.transform = 'scale(' + scale + ')';
+    stage.style.height = h * scale + 'px';
+  }
+
+  function render(t) {
+    var step = Math.floor(t / Math.max(0.016, +cfg.flicker));
+    for (var i = 0; i < chars.length; i++) {
+      var c = chars[i];
+      var locked = t >= lockAt[i];
+      var hidden = !locked && cfg.startHidden && t < startAt[i];
+      c.classList.toggle('h', hidden);
+      c.classList.toggle('s', !locked && !hidden);
+      if (!locked && !hidden) c.setAttribute('data-g', pool[hash(i, step) % pool.length]);
+    }
+  }
+
+  var raf = 0, t0 = 0;
+  function tick(now) {
+    if (!t0) t0 = now;
+    var t = (now - t0) / 1000;
+    var cycle = revealEnd + (+cfg.hold || 0);
+    if (cfg.loop && t > cycle + 0.05) { t0 = now; t = 0; }
+    render(t);
+    if (cfg.loop || t < revealEnd + 0.1) raf = requestAnimationFrame(tick);
+  }
+  function play() {
+    cancelAnimationFrame(raf);
+    t0 = 0;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { render(1e9); return; }
+    render(0);
+    raf = requestAnimationFrame(tick);
+  }
+
+  // Presets fill the size fields; editing a size switches the preset to Custom.
+  $('preset').addEventListener('change', function () {
+    if (this.value === 'custom') return;
+    var p = this.value.split('x'); $('aw').value = p[0]; $('ah').value = p[1];
+  });
+  ['aw', 'ah'].forEach(function (id) { $(id).addEventListener('input', function () { $('preset').value = 'custom'; }); });
+
+  var timer = 0;
+  form.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(function () { build(); play(); save(); }, 120);
+  });
+  form.addEventListener('submit', function (e) { e.preventDefault(); });
+  $('replay').addEventListener('click', play);
+  $('reset').addEventListener('click', function () { write(defaults); build(); play(); save(); });
+  $('copy').addEventListener('click', function () {
+    var json = JSON.stringify(read());
+    var out = $('settingsOut');
+    var done = function (msg) { $('copyNote').textContent = msg; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(json).then(function () { out.hidden = true; done('Settings copied. Paste them into the chat with Claude.'); },
+        function () { out.hidden = false; out.value = json; out.select(); done('Copy was blocked here, so the settings are selected below. Copy them manually.'); });
+    } else { out.hidden = false; out.value = json; out.select(); done('Select and copy the settings below.'); }
+  });
+  window.addEventListener('resize', fit);
+
+  function save() { try { localStorage.setItem('dither-reveal', JSON.stringify(read())); } catch (e) {} }
+  function restore() { try { var s = JSON.parse(localStorage.getItem('dither-reveal') || 'null'); if (s) write(s); } catch (e) {} }
+
+  // ?capture&cfg=<base64 JSON> renders exact frames on demand for video export.
+  var m = /[?&]cfg=([^&]+)/.exec(location.search);
+  if (/[?&]capture/.test(location.search)) {
+    document.documentElement.classList.add('capture');
+    if (m) write(JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1]))))));
+    build();
+    window.__TOTAL = revealEnd + (+cfg.hold || 0);
+    window.__SIZE = [+cfg.aw, +cfg.ah];
+    window.__render = render;
+    render(0);
+    return;
+  }
+  restore();
+  build();
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () { fit(); play(); });
+})();
+</script>
+</body>
+</html>
