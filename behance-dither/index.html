@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dither Reveal — Behance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
+<style>
+/* The Framer "Dither Reveal" component exactly as published (default props, 400px wide),
+   scaled up to sit on a 1400 × 788 Behance artboard. Nothing about the component changes. */
+html, body { margin: 0; height: 100%; background: #fff; }
+body { display: grid; place-items: center; overflow: hidden; }
+.frame { position: relative; overflow: hidden; }
+.artboard {
+  position: absolute; left: 0; top: 0;
+  width: 1400px; height: 788px;
+  background: #fff;
+  transform-origin: 0 0;
+  display: grid; place-items: center;
+}
+.component { width: 400px; transform: scale(3); }   /* intrinsic width 400px, scaled to 1200px */
+.reveal {
+  font-family: 'Inter', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0px;
+  line-height: 1.4em;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+.reveal > div { white-space: pre-wrap; word-break: break-word; }
+</style>
+</head>
+<body>
+<div class="frame" id="frame"><div class="artboard" id="artboard"><div class="component"><div class="reveal" id="reveal"></div></div></div></div>
+<script>
+(function () {
+  'use strict';
+  // Default props of the Framer component (DitherScrambleText.defaultProps).
+  var P = {
+    text: 'First line of the reveal.\nSecond line appears right below it.',
+    textColor: '#111111', scrambleColor: '#999999',
+    charset: ['░', '▒', '▓', '█'],
+    swapSpeed: 0.05, charRevealTime: 0.4, staggerDelay: 0.02, startDelay: 0, revealDirection: 'left'
+  };
+  var LEAD = 0.4;   // the component is hidden until it triggers; a short beat before the start
+  var HOLD = 2.5;   // finished text held before the loop restarts
+
+  var reveal = document.getElementById('reveal');
+  var lines = P.text.split('\n');
+  var cells = [];   // {span, ch, lockAt}
+  var flat = 0;
+  lines.forEach(function (line) {
+    var row = document.createElement('div');
+    line.split('').forEach(function (ch) {
+      var s = document.createElement('span');
+      s.textContent = ch;
+      row.appendChild(s);
+      // Left-to-right order across all lines, as in the component.
+      cells.push({ span: s, ch: ch, lockAt: P.startDelay + flat * P.staggerDelay + P.charRevealTime });
+      flat++;
+    });
+    reveal.appendChild(row);
+  });
+  var maxLock = Math.max.apply(null, cells.map(function (c) { return c.lockAt; }));
+  var TOTAL = LEAD + maxLock + P.swapSpeed + HOLD;
+
+  function hash(a, b) {
+    var h = Math.imul(a + 1, 2654435761) ^ Math.imul(b + 1, 40503);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return (h ^ (h >>> 16)) >>> 0;
+  }
+
+  // Same states as the component: hidden before the trigger, then every unlocked
+  // character shows a random glyph (swapped every swapSpeed) until its lock time.
+  function render(t) {
+    var e = t - LEAD, step = Math.floor(e / P.swapSpeed);
+    cells.forEach(function (c, i) {
+      if (e < 0) { c.span.textContent = c.ch; c.span.style.color = 'transparent'; return; }
+      if (c.ch === ' ' || e >= c.lockAt) { c.span.textContent = c.ch; c.span.style.color = P.textColor; return; }
+      c.span.textContent = P.charset[hash(i, step) % P.charset.length];
+      c.span.style.color = P.scrambleColor;
+    });
+  }
+
+  var frame = document.getElementById('frame'), artboard = document.getElementById('artboard');
+  function fit() {
+    var k = /[?&]capture/.test(location.search) ? 1 : Math.min(innerWidth / 1400, innerHeight / 788);
+    artboard.style.transform = 'scale(' + k + ')';
+    frame.style.width = 1400 * k + 'px'; frame.style.height = 788 * k + 'px';
+  }
+  fit(); addEventListener('resize', fit);
+
+  if (/[?&]capture/.test(location.search)) { window.__TOTAL = TOTAL; window.__render = render; render(0); return; }
+  var t0 = 0;
+  function tick(now) { if (!t0) t0 = now; var t = (now - t0) / 1000; if (t > TOTAL) { t0 = now; t = 0; } render(t); requestAnimationFrame(tick); }
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () { requestAnimationFrame(tick); });
+})();
+</script>
+</body>
+</html>
