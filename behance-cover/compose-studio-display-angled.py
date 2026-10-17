@@ -1,5 +1,5 @@
 # Grey Studio Display on the meadow, warped to the angle and framing of the reference (images/52.png).
-import sys
+import os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 W, H = 3200, 2400
@@ -48,12 +48,13 @@ def warp(box, dst, radius=0):
 head, hmask = warp((257, 208, 1156, 728), [(92, 150), (1452, 172), (1442, 995), (90, 948)], radius=int(6 * k))
 stand, smask = warp((598, 728, 815, 894), [(645, 960), (960, 962), (978, 1215), (656, 1215)])
 
-bg = Image.open('../cover/meadow.jpg').convert('RGB')
+# Background photo, its blur and edge darkening can be swapped with BG, BLUR and VIG.
+bg = Image.open(os.environ.get('BG', '../cover/meadow.jpg')).convert('RGB')
 sc = max(W / bg.width, H / bg.height) * 1.02
 bg = bg.resize((int(bg.width * sc), int(bg.height * sc)), Image.LANCZOS)
 ox, oy = (bg.width - W) // 2, int((bg.height - H) * 0.45)
-scene = bg.crop((ox, oy, ox + W, oy + H)).filter(ImageFilter.GaussianBlur(2))
-vign = Image.radial_gradient('L').resize((W, H)).point(lambda v: int(v * 0.45))
+scene = bg.crop((ox, oy, ox + W, oy + H)).filter(ImageFilter.GaussianBlur(float(os.environ.get('BLUR', 2))))
+vign = Image.radial_gradient('L').resize((W, H)).point(lambda v: int(v * float(os.environ.get('VIG', 0.45))))
 scene = Image.composite(Image.new('RGB', (W, H), (12, 26, 8)), scene, vign)
 
 both = Image.fromarray(np.maximum(np.asarray(hmask), np.asarray(smask)))
