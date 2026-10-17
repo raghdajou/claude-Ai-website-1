@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dither Text Reveal — Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap" rel="stylesheet">
+<style>
+/* The Framer Marketplace preview of "Dither Text Reveal" (Nora Salem): centred phrases that
+   scramble in as each one scrolls to the middle, laid out on a 1400 x 788 Behance artboard. */
+html, body { margin: 0; height: 100%; background: #fff; }
+body { display: grid; place-items: center; overflow: hidden; }
+.frame { position: relative; overflow: hidden; }
+.artboard { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; background: #fff; overflow: hidden; transform-origin: 0 0; }
+.page { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
+.section { height: 788px; display: grid; place-items: center; }
+.reveal {
+  font-family: 'Inter', sans-serif;
+  font-size: 58px;
+  font-weight: 400;
+  line-height: 1.4em;
+  letter-spacing: -0.01em;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.reveal > div { white-space: pre-wrap; word-break: break-word; }
+</style>
+</head>
+<body>
+<div class="frame" id="frame"><div class="artboard" id="artboard"><div class="page" id="page"></div></div></div>
+<script>
+(function () {
+  'use strict';
+  // The three phrases from the preview, with the component's default reveal settings.
+  var SECTIONS = [
+    { text: 'Built for impact', color: '#000000' },
+    { text: 'We build digital experiences\nthat matter', color: '#000000' },
+    { text: 'Design that feels alive.', color: '#1c05e6' }
+  ];
+  var GLYPHS = ['░', '▒', '▓', '█'], SCRAMBLE_COLOR = '#999999';
+  var SWAP = 0.05, CHAR_TIME = 0.4, STAGGER = 0.02;
+  var LEAD = 0.5, HOLD = 1.6, SCROLL = 1.1, END_HOLD = 2.2, H = 788;
+
+  var page = document.getElementById('page');
+  var blocks = SECTIONS.map(function (s) {
+    var sec = document.createElement('div'); sec.className = 'section';
+    var el = document.createElement('div'); el.className = 'reveal';
+    var cells = [], n = 0;
+    s.text.split('\n').forEach(function (line) {
+      var row = document.createElement('div');
+      line.split('').forEach(function (ch) {
+        var sp = document.createElement('span'); sp.textContent = ch; row.appendChild(sp);
+        cells.push({ span: sp, ch: ch, lockAt: n * STAGGER + CHAR_TIME }); n++;
+      });
+      el.appendChild(row);
+    });
+    sec.appendChild(el); page.appendChild(sec);
+    return { color: s.color, cells: cells, dur: (n - 1) * STAGGER + CHAR_TIME + SWAP };
+  });
+
+  // Timeline: reveal section 0, hold, scroll to the next; each reveal starts as its text
+  // reaches the centre band of the view (end of the scroll), like the component's "Center" trigger.
+  var t = LEAD, plan = [];
+  blocks.forEach(function (b, i) {
+    if (i > 0) { plan.push({ scrollFrom: (i - 1) * H, start: t }); t += SCROLL; }
+    b.start = t; t += b.dur + (i < blocks.length - 1 ? HOLD : END_HOLD);
+  });
+  var TOTAL = t;
+
+  function hash(a, b) {
+    var h = Math.imul(a + 1, 2654435761) ^ Math.imul(b + 1, 40503);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return (h ^ (h >>> 16)) >>> 0;
+  }
+  function ease(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+
+  function render(time) {
+    var y = 0;
+    plan.forEach(function (p) {
+      if (time >= p.start) y = p.scrollFrom + H * ease(Math.min(1, (time - p.start) / SCROLL));
+    });
+    page.style.transform = 'translateY(' + (-y) + 'px)';
+    blocks.forEach(function (b, bi) {
+      var e = time - b.start, step = Math.floor(e / SWAP);
+      b.cells.forEach(function (c, i) {
+        if (e < 0) { c.span.textContent = c.ch; c.span.style.color = 'transparent'; return; }
+        if (c.ch === ' ' || e >= c.lockAt) { c.span.textContent = c.ch; c.span.style.color = b.color; return; }
+        c.span.textContent = GLYPHS[hash(i + bi * 97, step) % GLYPHS.length];
+        c.span.style.color = SCRAMBLE_COLOR;
+      });
+    });
+  }
+
+  var frame = document.getElementById('frame'), artboard = document.getElementById('artboard');
+  var capture = /[?&]capture/.test(location.search);
+  function fit() {
+    var k = capture ? 1 : Math.min(innerWidth / 1400, innerHeight / 788);
+    artboard.style.transform = 'scale(' + k + ')';
+    frame.style.width = 1400 * k + 'px'; frame.style.height = 788 * k + 'px';
+  }
+  fit(); addEventListener('resize', fit);
+  if (capture) { window.__TOTAL = TOTAL; window.__render = render; render(0); return; }
+  var t0 = 0;
+  function tick(now) { if (!t0) t0 = now; var s = (now - t0) / 1000; if (s > TOTAL) { t0 = now; s = 0; } render(s); requestAnimationFrame(tick); }
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () { requestAnimationFrame(tick); });
+})();
+</script>
+</body>
+</html>
