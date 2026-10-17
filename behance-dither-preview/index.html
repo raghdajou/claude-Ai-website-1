@@ -41,7 +41,9 @@ body { display: grid; place-items: center; overflow: hidden; }
     blocks: ['▖', '▘', '▝', '▗', '▚', '▞', '▛', '▜', '▟', '▙'],
     noise: ['*', '#', '%', '+', '-', '.', '░', '▒']
   };
-  var SWAP = 0.05, STAGGER = 0.02, VIEW_H = 675;
+  var SWAP = 0.06, VIEW_H = 675;
+  // Writing pace, slowed from the component's 0.02 s stagger: each character also scrambles 2.5x longer.
+  var STAGGER = 0.05, REVEAL_SCALE = 2.5;
   var LEAD = 0.3, PAUSE = 1.8, SCROLL = 2.6, END_HOLD = 2.0;   // slow, even scroll between phrases
 
   var page = document.getElementById('page');
@@ -64,7 +66,7 @@ body { display: grid; place-items: center; overflow: hidden; }
     for (var i = 0; i < n; i++) order.push(i);
     if (s.order === 'center') { var mid = (n - 1) / 2; order.sort(function (a, b) { return Math.abs(a - mid) - Math.abs(b - mid); }); }
     else if (s.order === 'right') order.reverse();
-    order.forEach(function (idx, pos) { cells[idx].lockAt = pos * STAGGER + s.reveal; });
+    order.forEach(function (idx, pos) { cells[idx].lockAt = pos * STAGGER + s.reveal * REVEAL_SCALE; });
     sec.appendChild(el); page.appendChild(sec);
     return { s: s, el: el, cells: cells, pool: CHARSETS[s.charset], dur: Math.max.apply(null, cells.map(function (c) { return c.lockAt; })) + SWAP, seed: si * 131 };
   });
