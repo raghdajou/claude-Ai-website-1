@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foxltics — Dither Intro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* The slide is laid out at the Figma artboard's own size (1920×1027) and scaled to fit,
+   so every position below matches the design file. */
+:root {
+  --ink: #0b0b0b;
+  --muted: #858484;
+  --pill: #f4f4f4;
+  --lime: #daf17e;
+  --scramble: #b4b4b4;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #fff; }
+body {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-family: 'Urbanist', system-ui, sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+.slide {
+  position: relative;
+  width: 1920px;
+  height: 1027px;
+  background: #fff;
+  transform-origin: top left;
+  flex: none;
+}
+.frame { position: relative; overflow: hidden; }
+
+.label {
+  position: absolute;
+  left: 130px;
+  top: 200px;
+  width: 546px;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 26px;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+.intro {
+  position: absolute;
+  left: 112px;
+  top: 333px;
+  width: 1148px;
+  margin: 0;
+  font-size: 33px;
+  font-weight: 400;
+  line-height: 38px;
+  letter-spacing: -0.012em;
+}
+/* Dither Reveal: each character keeps its real letter for layout (so nothing reflows) and,
+   until it locks, shows a flickering dither glyph drawn over it instead. */
+.dither .c { position: relative; }
+.dither .c.s { color: transparent; }
+.dither .c.s::after {
+  content: attr(data-g);
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  color: var(--scramble);
+}
+
+/* Pill positions and widths taken from the Figma frames (Frame 171–175). */
+.tags { position: absolute; left: 0; top: 773px; margin: 0; padding: 0; list-style: none; }
+.tags li {
+  position: absolute;
+  top: 0;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--pill);
+  font-size: 20px;
+  font-weight: 500;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.tags li:nth-child(1) { left: 130px; width: 187px; }
+.tags li:nth-child(2) { left: 346px; width: 95px; }
+.tags li:nth-child(3) { left: 468px; width: 175px; }
+.tags li:nth-child(4) { left: 673px; width: 243px; }
+.tags li:nth-child(5) { left: 945px; width: 195px; }
+
+.sticker { position: absolute; left: 0; top: 0; }
+.sticker .bar { position: absolute; background: var(--lime); }
+.sticker .b1 { left: 1523px; top: 596px; width: 196px; height: 56px; }
+.sticker .b2 { left: 1534px; top: 655px; width: 200px; height: 56px; }
+.sticker .b3 { left: 1552px; top: 721px; width: 172px; height: 56px; transform: rotate(-2.3deg); }
+.sticker p {
+  position: absolute;
+  left: 1545px;
+  top: 599px;
+  width: 174px;
+  margin: 0;
+  font-size: 46px;
+  font-weight: 400;
+  line-height: 54px;
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+.replay {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  background: #fff;
+  font: 500 14px 'Urbanist', system-ui, sans-serif;
+  color: var(--ink);
+  cursor: pointer;
+}
+.capture .replay { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dither .c.s { color: inherit; }
+  .dither .c.s::after { content: none; }
+}
+</style>
+</head>
+<body>
+<div class="frame" id="frame">
+  <div class="slide" id="slide">
+    <p class="label dither">Where intelligence meets the people behind your business</p>
+
+    <p class="intro dither" id="intro">Most dashboards show you data. Foxltics reads it , then tells you what it means, what comes next, and exactly what to do about it. A full-scale HR management system built around an AI assistant that thinks alongside the people who run your workforce, not behind them. Eight modules. One intelligence layer. Zero context switching.</p>
+
+    <ul class="tags" aria-label="Project tags">
+      <li>SaaS Platform</li>
+      <li>UIUX</li>
+      <li>brand identity</li>
+      <li>Productive HR system</li>
+      <li>AI Assistant tool</li>
+    </ul>
+
+    <div class="sticker" aria-hidden="true">
+      <span class="bar b1"></span>
+      <span class="bar b2"></span>
+      <span class="bar b3"></span>
+      <p>Fast AI.<br>Analytic<br>Tool</p>
+    </div>
+  </div>
+</div>
+<button class="replay" id="replay" type="button">Replay</button>
+
+<script>
+(function () {
+  'use strict';
+
+  // Same behaviour as the Framer Dither Reveal component (dither glyph set, left-to-right
+  // order), driven by time instead of scroll and paced slowly for the Behance slide.
+  var GLYPHS = ['░', '▒', '▓', '█'];
+  var DELAY = 0.8;              // seconds before the first character locks
+  var STAGGER = 0.024;          // seconds between successive characters locking
+  var SCRAMBLE = 0.7;           // seconds each character flickers before it locks
+  var SWAP = 0.07;              // seconds between glyph changes while flickering
+  var HOLD = 3.0;               // seconds the finished slide is held (for the loop)
+
+  var slide = document.getElementById('slide');
+  var frame = document.getElementById('frame');
+
+  // Split every .dither element into character spans, keeping the text readable for screen readers.
+  var chars = [];
+  document.querySelectorAll('.dither').forEach(function (el) {
+    var text = el.textContent;
+    // CSS capitalize would capitalise every character span, so apply it to the text instead.
+    if (getComputedStyle(el).textTransform === 'capitalize') {
+      text = text.replace(/(^|\s)(\S)/g, function (m, sp, ch) { return sp + ch.toUpperCase(); });
+      el.style.textTransform = 'none';
+    }
+    el.setAttribute('aria-label', text);
+    el.textContent = '';
+    text.split(' ').forEach(function (word, wi, all) {
+      var w = document.createElement('span');
+      w.style.whiteSpace = 'nowrap';                  // keep words whole when lines wrap
+      w.setAttribute('aria-hidden', 'true');
+      word.split('').forEach(function (ch) {
+        var c = document.createElement('span');
+        c.className = 'c';
+        c.textContent = ch;
+        w.appendChild(c);
+        chars.push(c);
+      });
+      el.appendChild(w);
+      if (wi < all.length - 1) el.appendChild(document.createTextNode(' '));
+    });
+  });
+  var REVEAL = SCRAMBLE + STAGGER * (chars.length - 1);
+  var TOTAL = DELAY + REVEAL + HOLD;
+
+  function fit() {
+    var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1027);
+    slide.style.transform = 'scale(' + scale + ')';
+    frame.style.width = 1920 * scale + 'px';
+    frame.style.height = 1027 * scale + 'px';
+  }
+  fit();
+  window.addEventListener('resize', fit);
+
+  // Glyph for character i at flicker step k: a fixed hash, so exported frames are repeatable.
+  function glyph(i, k) {
+    var h = Math.imul(i + 1, 2654435761) ^ Math.imul(k + 1, 40503);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return GLYPHS[((h ^ (h >>> 16)) >>> 0) % GLYPHS.length];
+  }
+
+  function render(t) {
+    var step = Math.floor(t / SWAP);
+    for (var i = 0; i < chars.length; i++) {
+      var locked = t >= DELAY + i * STAGGER + SCRAMBLE;
+      chars[i].classList.toggle('s', !locked);
+      if (!locked) chars[i].setAttribute('data-g', glyph(i, step));
+    }
+  }
+
+  // ?capture renders exact frames on demand (for exporting video); otherwise it plays live.
+  if (/[?&]capture/.test(location.search)) {
+    document.documentElement.classList.add('capture');
+    window.__TOTAL = TOTAL;
+    window.__render = render;
+    render(0);
+    return;
+  }
+
+  var startAt = 0;
+  function tick(now) {
+    if (!startAt) startAt = now;
+    var t = (now - startAt) / 1000;
+    render(t);
+    if (t < DELAY + REVEAL) requestAnimationFrame(tick);
+  }
+  function play() { startAt = 0; render(0); requestAnimationFrame(tick); }
+  document.getElementById('replay').addEventListener('click', play);
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) render(TOTAL);
+  else (document.fonts ? document.fonts.ready : Promise.resolve()).then(play);
+})();
+</script>
+</body>
+</html>
