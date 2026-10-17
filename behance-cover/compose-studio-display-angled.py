@@ -1,8 +1,21 @@
 # Grey Studio Display on the meadow, warped to the angle and framing of the reference (images/52.png).
+import sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 W, H = 3200, 2400
 src = Image.open('studio-display-grey.png').convert('RGB')
+# Optional: put another dashboard page on the screen. Args: page image, first row to show, output name.
+out = 'grey-meadow-angle'
+if len(sys.argv) > 1:
+    page = Image.open(sys.argv[1]).convert('RGB')
+    top = int(sys.argv[2]) if len(sys.argv) > 2 else 0
+    out = sys.argv[3] if len(sys.argv) > 3 else out
+    sx0, sy0, sx1, sy1 = 541, 441, 2288, 1436       # screen area inside the bezel of the source image
+    sw, sh = sx1 - sx0, sy1 - sy0
+    crop = page.crop((0, top, page.width, top + round(page.width * sh / sw)))
+    crop = crop.resize((sw * 2, sh * 2), Image.LANCZOS).resize((sw, sh), Image.LANCZOS)
+    crop = crop.filter(ImageFilter.UnsharpMask(1.2, 60, 2))
+    src.paste(crop, (sx0, sy0))
 k = src.width / 1400                      # source parts measured on a 1400px-wide view
 f = W / 1536                              # target corners measured on a 1536px-wide view of the reference
 
@@ -48,5 +61,5 @@ ImageDraw.Draw(edge).polygon([(x * f, y * f) for x, y in [(1450, 172), (1458, 18
 edge = edge.filter(ImageFilter.GaussianBlur(1.5))
 grad = Image.linear_gradient('L').resize((W, H)).point(lambda v: 150 + v // 3)
 scene = Image.composite(Image.merge('RGB', [grad] * 3), scene, edge)
-scene.save('grey-meadow-angle.png', optimize=True)
-scene.resize((1200, 900), Image.LANCZOS).save('grey-meadow-angle-preview.jpg', quality=90)
+scene.save(out + '.png', optimize=True)
+scene.resize((1200, 900), Image.LANCZOS).save(out + '-preview.jpg', quality=90)
