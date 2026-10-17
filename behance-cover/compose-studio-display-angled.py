@@ -4,15 +4,22 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 W, H = 3200, 2400
 src = Image.open('studio-display-grey.png').convert('RGB')
-# Optional: put another dashboard page on the screen. Args: page image, first row to show, output name.
+# Optional: put another dashboard page on the screen.
+# Args: page image, region to show as "x0,y0,x1,y1", output name. A region narrower than the
+# screen is centred on the page's own background colour so whole charts can be shown.
 out = 'grey-meadow-angle'
 if len(sys.argv) > 1:
     page = Image.open(sys.argv[1]).convert('RGB')
-    top = int(sys.argv[2]) if len(sys.argv) > 2 else 0
+    box = [int(v) for v in sys.argv[2].split(',')] if len(sys.argv) > 2 else [0, 0, page.width, page.height]
     out = sys.argv[3] if len(sys.argv) > 3 else out
     sx0, sy0, sx1, sy1 = 541, 441, 2288, 1436       # screen area inside the bezel of the source image
     sw, sh = sx1 - sx0, sy1 - sy0
-    crop = page.crop((0, top, page.width, top + round(page.width * sh / sw)))
+    region = page.crop(box)
+    edge = np.concatenate([np.asarray(region)[:, :4].reshape(-1, 3), np.asarray(region)[:, -4:].reshape(-1, 3)])
+    cw = max(region.width, round(region.height * sw / sh))
+    ch = round(cw * sh / sw)
+    crop = Image.new('RGB', (cw, ch), tuple(int(v) for v in np.median(edge, 0)))
+    crop.paste(region, ((cw - region.width) // 2, (ch - region.height) // 2))
     crop = crop.resize((sw * 2, sh * 2), Image.LANCZOS).resize((sw, sh), Image.LANCZOS)
     crop = crop.filter(ImageFilter.UnsharpMask(1.2, 60, 2))
     src.paste(crop, (sx0, sy0))
