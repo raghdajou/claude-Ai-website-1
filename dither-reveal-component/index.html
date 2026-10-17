@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dither Reveal Component</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
+<style>
+/* Demo: the component with its default props on a 1400 x 788 Behance artboard, scaled to fit. */
+html, body { margin: 0; height: 100%; background: #fff; }
+body { display: grid; place-items: center; overflow: hidden; font-family: system-ui, sans-serif; }
+.frame { position: relative; overflow: hidden; }
+.artboard {
+  position: absolute; left: 0; top: 0; width: 1400px; height: 788px;
+  background: #fff; transform-origin: 0 0; display: grid; place-items: center;
+}
+.component { width: 400px; transform: scale(3); }
+.replay {
+  position: fixed; right: 16px; bottom: 16px; min-height: 40px; padding: 0 16px;
+  border: 1px solid #ddd; border-radius: 999px; background: #fff; color: #111; font: 500 14px system-ui, sans-serif; cursor: pointer;
+}
+.capture .replay { display: none; }
+</style>
+</head>
+<body>
+<div class="frame" id="frame"><div class="artboard" id="artboard"><div class="component" id="root"></div></div></div>
+<button class="replay" id="replay" type="button">Replay</button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script>
+(async function () {
+  'use strict';
+  var frame = document.getElementById('frame'), artboard = document.getElementById('artboard');
+  function fit() {
+    var k = Math.min(innerWidth / 1400, innerHeight / 788);
+    artboard.style.transform = 'scale(' + k + ')';
+    frame.style.width = 1400 * k + 'px'; frame.style.height = 788 * k + 'px';
+  }
+  fit(); addEventListener('resize', fit);
+
+  // Load DitherReveal.jsx as-is: drop its import/export lines and compile the JSX in the browser.
+  var src = await (await fetch('DitherReveal.jsx')).text();
+  src = src.replace(/^import .*$/m, 'const { useEffect, useMemo, useRef, useState } = React;')
+           .replace('export default function', 'function');
+  var code = Babel.transform(src + '\nwindow.DitherReveal = DitherReveal;', { presets: ['react'] }).code;
+  new Function(code)();
+
+  var root = ReactDOM.createRoot(document.getElementById('root'));
+  var run = 0;
+  function play() {
+    run++;
+    root.render(React.createElement(window.DitherReveal, { key: run, trigger: 'mount' }));
+  }
+  await (document.fonts ? document.fonts.ready : Promise.resolve());
+  play();
+  document.getElementById('replay').addEventListener('click', play);
+})();
+</script>
+</body>
+</html>
