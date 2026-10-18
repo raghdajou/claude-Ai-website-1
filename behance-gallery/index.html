@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foxlytics Gallery Slide</title>
+<style>
+/* The Framer "gal" component (1200 x 500): three stacked cards that spring apart into a
+   centre card and two smaller side cards. Scaled 1.1x onto a 1400 x 788 Behance artboard.
+   ?d=payroll|analytics|overview  &v=split|focus  pick the dashboard and the version. */
+html, body { margin: 0; height: 100%; background: #f1f2ee; }
+body { display: grid; place-items: center; overflow: hidden; }
+.frame { position: relative; overflow: hidden; }
+.artboard { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; background: #f1f2ee; transform-origin: 0 0; }
+.gal { position: absolute; left: 40px; top: 119px; width: 1200px; height: 500px; transform: scale(1.1); transform-origin: 0 0; }
+.card {
+  position: absolute;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgb(187, 221, 255);
+  box-shadow: 0 1px 2px rgba(20, 24, 12, 0.06), 0 18px 40px -18px rgba(20, 24, 12, 0.22);
+}
+.card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+</style>
+</head>
+<body>
+<div class="frame" id="frame"><div class="artboard" id="artboard"><div class="gal" id="gal"></div></div></div>
+<script>
+(function () {
+  'use strict';
+  var q = new URLSearchParams(location.search);
+  var dash = q.get('d') || 'payroll', version = q.get('v') || 'split';
+
+  // Card rects in the component's own 1200 x 500 frame (from its CSS).
+  var STACK = { x: 0.49916667 * 1200 - 415 / 2, y: 0, w: 415, h: 500 };
+  var END = {
+    left:   { x: 21, y: 0.498 * 500 - 341 / 2, w: 308, h: 341 },
+    center: STACK,
+    right:  { x: 1200 - 22 - 308, y: 0.498 * 500 - 341 / 2, w: 308, h: 341 }
+  };
+  // Timeline: hold the stack (the component's 0.7 s delay), spring apart over 3 s,
+  // hold, then fold back so the GIF loops.
+  var DELAY = 0.7, SPREAD = 3.0, HOLD = 2.4, FOLD = 1.3, REST = 0.5;
+  var TOTAL = DELAY + SPREAD + HOLD + FOLD + REST;
+
+  var gal = document.getElementById('gal'), cards = {};
+  ['left', 'right', 'center'].forEach(function (part) {   // centre is drawn last, on top
+    var c = document.createElement('div'); c.className = 'card';
+    var img = document.createElement('img'); img.alt = '';
+    img.src = 'assets/' + dash + '-' + version + '-' + part + '.jpg';
+    c.appendChild(img); gal.appendChild(c); cards[part] = c;
+  });
+
+  // Framer spring with bounce 0.2 (damping ratio 0.8), settling over its 3 s duration.
+  function spring(t) {
+    var z = 0.8, w = 4 / (z * SPREAD) * 1.15, wd = w * Math.sqrt(1 - z * z);
+    return 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + (z * w / wd) * Math.sin(wd * t));
+  }
+  function ease(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+  function progress(t) {
+    if (t < DELAY) return 0;
+    if (t < DELAY + SPREAD + HOLD) return spring(t - DELAY);
+    var f = (t - DELAY - SPREAD - HOLD) / FOLD;
+    return f < 1 ? spring(SPREAD + HOLD) * (1 - ease(f)) : 0;
+  }
+  function render(t) {
+    var p = progress(t);
+    Object.keys(cards).forEach(function (part) {
+      var a = STACK, b = END[part], s = cards[part].style;
+      s.left = a.x + (b.x - a.x) * p + 'px'; s.top = a.y + (b.y - a.y) * p + 'px';
+      s.width = a.w + (b.w - a.w) * p + 'px'; s.height = a.h + (b.h - a.h) * p + 'px';
+    });
+  }
+
+  var frame = document.getElementById('frame'), artboard = document.getElementById('artboard');
+  var capture = q.has('capture');
+  function fit() {
+    var k = capture ? 1 : Math.min(innerWidth / 1400, innerHeight / 788);
+    artboard.style.transform = 'scale(' + k + ')';
+    frame.style.width = 1400 * k + 'px'; frame.style.height = 788 * k + 'px';
+  }
+  fit(); addEventListener('resize', fit);
+  render(0);
+  var imgs = Array.prototype.slice.call(document.images);
+  var loaded = Promise.all(imgs.map(function (i) { return i.decode ? i.decode().catch(function () {}) : Promise.resolve(); }));
+  if (capture) { window.__TOTAL = TOTAL; window.__render = render; loaded.then(function () { window.__ready = true; }); return; }
+  var t0 = 0;
+  function tick(now) { if (!t0) t0 = now; var s = (now - t0) / 1000; if (s > TOTAL) { t0 = now; s = 0; } render(s); requestAnimationFrame(tick); }
+  loaded.then(function () { requestAnimationFrame(tick); });
+})();
+</script>
+</body>
+</html>
