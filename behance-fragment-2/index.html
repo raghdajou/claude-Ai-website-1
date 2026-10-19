@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fragment Reveal Slide II</title>
+<style>
+/* The Framer "FragmentReveal" component (8 x 6 tiles, 4px gap, default timing) filling a
+   1400 x 788 Behance artboard, cycling through four photos: tiles reveal in random order,
+   hold, then scatter away before the next photo. */
+html, body { margin: 0; height: 100%; background: #f4f4f1; }
+body { display: grid; place-items: center; overflow: hidden; }
+.frame { position: relative; overflow: hidden; }
+.artboard { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; background: #f4f4f1; transform-origin: 0 0; overflow: hidden; }
+.layer { position: absolute; inset: 0; display: grid; }
+.tile { position: relative; overflow: hidden; will-change: transform, opacity; }
+.tile > div { position: absolute; background-repeat: no-repeat; background-size: cover; background-position: center center; }
+</style>
+</head>
+<body>
+<div class="frame" id="frame"><div class="artboard" id="artboard"></div></div>
+<script>
+(function () {
+  'use strict';
+  var PHOTOS = ['images/photo-78.jpg', 'images/photo-79.jpg', 'images/photo-80.jpg', 'images/photo-81.jpg'];
+  // Component defaults: grid 8 x 6, gap 4px; reveal 0.5 s over a 0.8 s random spread,
+  // from scale 0.9 and 8px below; hold 1.2 s; exit "random tiles" 0.4 s over 0.8 s, 6px scatter.
+  var COLS = 8, ROWS = 6, GAP = 4;
+  var DUR = 0.5, SPREAD = 0.8, START_SCALE = 0.9, OFFSET_Y = 8, HOLD = 1.2;
+  var EXIT_DUR = 0.4, EXIT_SPREAD = 0.8, EXIT_OFFSET = 6;
+  var PX = 2;   // the component's pixel offsets, doubled to read at Behance slide size
+  var CYCLE = SPREAD + DUR + HOLD + EXIT_SPREAD + EXIT_DUR;
+  var TOTAL = CYCLE * PHOTOS.length;
+
+  // Small seeded generator so the tile order is the same every run (and in exports).
+  function rng(seed) { var t = seed >>> 0; return function () { t += 1831565813; var x = t; x = Math.imul(x ^ x >>> 15, x | 1); x ^= x + Math.imul(x ^ x >>> 7, x | 61); return ((x ^ x >>> 14) >>> 0) / 4294967296; }; }
+  // cubic-bezier(0.22, 1, 0.36, 1), the component's ease, solved numerically.
+  function bezier(p1x, p1y, p2x, p2y) {
+    function c(a, b, t) { return 3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t; }
+    return function (x) {
+      if (x <= 0) return 0; if (x >= 1) return 1;
+      var lo = 0, hi = 1, t = x;
+      for (var i = 0; i < 30; i++) { t = (lo + hi) / 2; if (c(p1x, p2x, t) < x) lo = t; else hi = t; }
+      return c(p1y, p2y, t);
+    };
+  }
+  var ease = bezier(0.22, 1, 0.36, 1);
+
+  var art = document.getElementById('artboard');
+  var n = COLS * ROWS;
+  var layers = PHOTOS.map(function (src, li) {
+    var layer = document.createElement('div'); layer.className = 'layer';
+    layer.style.gridTemplateColumns = 'repeat(' + COLS + ', minmax(0, 1fr))';
+    layer.style.gridTemplateRows = 'repeat(' + ROWS + ', minmax(0, 1fr))';
+    layer.style.gap = GAP + 'px';
+    var r = rng(2166136261 ^ (li * 7919 + 1));
+    var order = []; for (var i = 0; i < n; i++) order.push(i);
+    for (i = n - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var tmp = order[i]; order[i] = order[j]; order[j] = tmp; }
+    var rank = []; order.forEach(function (idx, k) { rank[idx] = k; });
+    var tiles = [];
+    for (var row = 0; row < ROWS; row++) for (var col = 0; col < COLS; col++) {
+      var k = row * COLS + col;
+      var tile = document.createElement('div'); tile.className = 'tile';
+      var img = document.createElement('div');
+      img.style.left = (-col * 100) + '%'; img.style.top = (-row * 100) + '%';
+      img.style.width = (COLS * 100) + '%'; img.style.height = (ROWS * 100) + '%';
+      img.style.backgroundImage = 'url(' + src + ')';
+      tile.appendChild(img); layer.appendChild(tile);
+      tiles.push({ el: tile, delay: SPREAD * rank[k] / (n - 1), exitDelay: r() * EXIT_SPREAD,
+                   sx: (r() * 2 - 1) * EXIT_OFFSET, sy: (r() * 2 - 1) * EXIT_OFFSET });
+    }
+    art.appendChild(layer);
+    return { el: layer, tiles: tiles };
+  });
+
+  function render(time) {
+    var t = ((time % TOTAL) + TOTAL) % TOTAL;
+    var cur = Math.floor(t / CYCLE), local = t - cur * CYCLE;
+    var exitAt = SPREAD + DUR + HOLD;
+    layers.forEach(function (L, li) {
+      L.el.style.visibility = li === cur ? 'visible' : 'hidden';
+      if (li !== cur) return;
+      L.tiles.forEach(function (tile) {
+        var p = ease((local - tile.delay) / DUR);
+        var q = ease((local - exitAt - tile.exitDelay) / EXIT_DUR);
+        var opacity = p * (1 - q);
+        var scale = (START_SCALE + (1 - START_SCALE) * p) * (1 - 0.1 * q);
+        var x = tile.sx * q * PX, y = OFFSET_Y * (1 - p) * PX + tile.sy * q * PX;
+        tile.el.style.opacity = opacity.toFixed(4);
+        tile.el.style.transform = 'translate(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px) scale(' + scale.toFixed(4) + ')';
+      });
+    });
+  }
+
+  var frame = document.getElementById('frame');
+  var capture = /[?&]capture/.test(location.search);
+  function fit() {
+    var k = capture ? 1 : Math.min(innerWidth / 1400, innerHeight / 788);
+    art.style.transform = 'scale(' + k + ')';
+    frame.style.width = 1400 * k + 'px'; frame.style.height = 788 * k + 'px';
+  }
+  fit(); addEventListener('resize', fit);
+  render(0);
+  var loaded = Promise.all(PHOTOS.map(function (src) { var i = new Image(); i.src = src; return i.decode().catch(function () {}); }));
+  if (capture) { window.__TOTAL = TOTAL; window.__render = render; loaded.then(function () { window.__ready = true; }); return; }
+  var t0 = 0;
+  function tick(now) { if (!t0) t0 = now; render((now - t0) / 1000); requestAnimationFrame(tick); }
+  loaded.then(function () { requestAnimationFrame(tick); });
+})();
+</script>
+</body>
+</html>
