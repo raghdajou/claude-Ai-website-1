@@ -9,7 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap" rel="stylesheet">
 <style>
 /* Two Framer components on one 1400 x 788 Behance artboard, light mode, in the Foxlytics lime:
-   "Kinetic Text Swapper" (3D roll) as the headline and "BarGraph" below it. */
+   "BarGraph" first, then "Kinetic Text Swapper" (3D roll) 200px below it. The artboard scrolls
+   between them like a viewer scrolling the project page, and loops seamlessly. */
 :root {
   --lime: #daf17e;          /* the colour from the reference swatch */
   --lime-deep: #b7cf66;
@@ -18,19 +19,21 @@
   --muted: #a1a1aa;         /* component default "Static Color" */
   --page: #f7f7f4;
   --card: #ffffff;
-  --track: #e7e9df;
+  --track: #a1a1aa;         /* bar background, at the component's 0.3 opacity */
 }
 html, body { margin: 0; height: 100%; background: var(--page); }
 body { display: grid; place-items: center; overflow: hidden; font-family: 'Inter', sans-serif; }
 .frame { position: relative; overflow: hidden; }
-.artboard { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; background: var(--page); transform-origin: 0 0; }
+.artboard { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; background: var(--page); transform-origin: 0 0; overflow: hidden; }
+/* The scrolling page: chart, 200px, headline, 200px, chart (a copy, so the loop is seamless). */
+.page { position: absolute; left: 0; top: 0; width: 1400px; display: flex; flex-direction: column; align-items: center; gap: 200px; will-change: transform; }
 
 /* Kinetic Text Swapper: 72px, 600, 1.1em, -2px, 0.25em gap, centred */
 .swapper {
-  position: absolute; left: 0; right: 0; top: 92px;
+  position: relative; width: 100%;
   display: flex; justify-content: center; align-items: center; gap: 0.25em;
   perspective: 1200px;
-  font-size: 72px; font-weight: 600; line-height: 1.1em; letter-spacing: -2px;
+  font-size: 88px; font-weight: 600; line-height: 1.1em; letter-spacing: -2px;
 }
 .swapper .prefix { color: var(--muted); white-space: nowrap; }
 .swapper .slot { position: relative; display: inline-flex; transform-style: preserve-3d; }
@@ -46,7 +49,7 @@ body { display: grid; place-items: center; overflow: hidden; font-family: 'Inter
 
 /* BarGraph: light card, 30px padding, 12 bars, 8px spacing, 6px radius, max height 280 */
 .graph {
-  position: absolute; left: 150px; top: 270px; width: 1100px; height: 420px; box-sizing: border-box;
+  position: relative; flex: none; width: 1100px; height: 420px; box-sizing: border-box;
   padding: 30px; border-radius: 12px; background: var(--card);
   box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04), 0 18px 40px -24px rgba(24, 24, 27, 0.18);
   display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -54,44 +57,49 @@ body { display: grid; place-items: center; overflow: hidden; font-family: 'Inter
 .bars { display: flex; flex-direction: row; align-items: flex-end; justify-content: center; gap: 8px; height: 360px; width: 100%; }
 .col { display: flex; flex-direction: column; align-items: center; width: calc((100% - 88px) / 12); }
 .track { width: 100%; height: 280px; position: relative; margin-bottom: 12px; display: flex; align-items: flex-end; justify-content: center; }
-.track::before { content: ""; position: absolute; inset: 0; background: var(--track); border-radius: 6px; opacity: 0.6; }
+.track::before { content: ""; position: absolute; inset: 0; background: var(--track); border-radius: 6px; opacity: 0.3; }
 .bar { width: 100%; border-radius: 6px; position: relative; z-index: 2; overflow: hidden; }
 .pct {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   white-space: nowrap; font-size: 16px; line-height: 1em; letter-spacing: -0.01em; font-weight: 600;
 }
-.label { color: var(--ink); font-size: 14px; line-height: 1.2em; letter-spacing: -0.01em; font-weight: 500; white-space: nowrap; }
+.label { color: #52525b; font-size: 14px; line-height: 1.2em; letter-spacing: -0.01em; font-weight: 500; white-space: nowrap; }
 </style>
 </head>
 <body>
 <div class="frame" id="frame"><div class="artboard" id="artboard">
-  <div class="swapper" id="swapper">
-    <div class="prefix">We engineer</div>
-    <div class="slot" id="slot"><div class="sizer" id="sizer"></div></div>
+  <div class="page" id="page">
+    <div class="graph"><div class="bars" id="bars"></div></div>
+    <div class="swapper" id="swapper">
+      <div class="prefix">We engineer</div>
+      <div class="slot" id="slot"><div class="sizer" id="sizer"></div></div>
+    </div>
+    <div class="graph"><div class="bars" id="bars2"></div></div>
   </div>
-  <div class="graph"><div class="bars" id="bars"></div></div>
 </div></div>
 <script>
 (function () {
   'use strict';
   // --- Kinetic Text Swapper defaults ---
   var WORDS = ['Experiences', 'Systems', 'Interfaces', 'Platforms'];
-  var INTERVAL = 2.5;                                   // swap time (s)
+  var INTERVAL = 1.5;                                   // swap time (s)
   // "True 3D Roll" variant
   var FROM = { opacity: 0, rotateX: -90, y: 40, z: -50 }, AT = { opacity: 1, rotateX: 0, y: 0, z: 0 },
       TO = { opacity: 0, rotateX: 90, y: -40, z: -50 };
 
-  // --- BarGraph defaults, recoloured from the lime swatch ---
-  var SOFT = { color: '#b7cf66', pct: '#18181b' }, LIME = { color: '#daf17e', pct: '#18181b' }, OLIVE = { color: '#2f3a1f', pct: '#daf17e' };
+  // --- BarGraph defaults (12 bars, 6px radius), every bar in the lime from the swatch ---
+  var LIME = { color: '#daf17e', pct: '#18181b' };
   var DATA = [
-    ['Jan', 64, SOFT], ['Feb', 79, SOFT], ['Mar', 92, SOFT],
+    ['Jan', 64, LIME], ['Feb', 79, LIME], ['Mar', 92, LIME],
     ['Apr', 84, LIME], ['May', 26, LIME], ['Jun', 50, LIME],
-    ['Jul', 74, OLIVE], ['Aug', 85, OLIVE], ['Sep', 75, OLIVE],
+    ['Jul', 74, LIME], ['Aug', 85, LIME], ['Sep', 75, LIME],
     ['Oct', 47, LIME], ['Nov', 78, LIME], ['Dec', 85, LIME]
   ];
-  var MAX_H = 280, MIN_H = 40, DELAY = 0.1, DURATION = 0.8;
-  var TOTAL = INTERVAL * WORDS.length;                  // one full word cycle; bars fold away at the end
-  var FOLD = 0.7;
+  var MAX_H = 280, MIN_H = 40, DELAY = 0.2, DURATION = 0.8;
+  // Scroll timeline: hold on the chart while the bars rise, scroll down to the headline,
+  // hold while the words roll, scroll on to the next chart (a copy), then wrap.
+  var CHART_HOLD = 3.6, SCROLL = 1.2, TEXT_HOLD = 6;
+  var TOTAL = CHART_HOLD + SCROLL + TEXT_HOLD + SCROLL; // 12 s = 8 word swaps
 
   // Damped spring step response, as framer-motion's spring (stiffness, damping, mass).
   function spring(k, c, m) {
@@ -112,9 +120,8 @@ body { display: grid; place-items: center; overflow: hidden; font-family: 'Inter
     var el = document.createElement('div'); el.className = 'word'; el.textContent = w; slot.appendChild(el); return el;
   });
 
-  // Build the bars.
-  var barsEl = document.getElementById('bars');
-  var bars = DATA.map(function (d, i) {
+  // Build the bars (the second chart is the copy that scrolls in before the loop wraps).
+  function buildBars(barsEl) { return DATA.map(function (d, i) {
     var col = document.createElement('div'); col.className = 'col';
     var track = document.createElement('div'); track.className = 'track';
     var bar = document.createElement('div'); bar.className = 'bar'; bar.style.background = d[2].color;
@@ -122,7 +129,13 @@ body { display: grid; place-items: center; overflow: hidden; font-family: 'Inter
     var label = document.createElement('div'); label.className = 'label'; label.textContent = d[0];
     bar.appendChild(pct); track.appendChild(bar); col.appendChild(track); col.appendChild(label); barsEl.appendChild(col);
     return { bar: bar, pct: pct, label: label, h: Math.max(MIN_H, MAX_H * d[1] / 100), i: i };
-  });
+  }); }
+  var bars = buildBars(document.getElementById('bars')), bars2 = buildBars(document.getElementById('bars2'));
+  var pageEl = document.getElementById('page'), swapperEl = document.getElementById('swapper');
+  function easeScroll(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+  // Scroll offsets that centre the first chart, the headline and the copied chart in the 788px view.
+  function centreOf(el) { return el.offsetTop + el.offsetHeight / 2 - 394; }
+  function stops() { var g = pageEl.children; return [centreOf(g[0]), centreOf(g[1]), centreOf(g[2])]; }
 
   function styleWord(el, s) {
     el.style.opacity = clamp01(s.opacity).toFixed(3);
@@ -133,23 +146,31 @@ body { display: grid; place-items: center; overflow: hidden; font-family: 'Inter
   function render(time) {
     var t = ((time % TOTAL) + TOTAL) % TOTAL;
     // Words: the current word rolls in from below while the previous one rolls away upwards.
-    var cur = Math.floor(t / INTERVAL), local = t - cur * INTERVAL, prev = (cur + WORDS.length - 1) % WORDS.length;
+    var step = Math.floor(t / INTERVAL), local = t - step * INTERVAL, cur = step % WORDS.length, prev = (cur + WORDS.length - 1) % WORDS.length;
     var p = textSpring(local);
     wordEls.forEach(function (el, i) {
       if (i === cur) { el.style.visibility = 'visible'; styleWord(el, mix(FROM, AT, p)); }
       else if (i === prev) { el.style.visibility = 'visible'; styleWord(el, mix(AT, TO, p)); }
       else el.style.visibility = 'hidden';
     });
-    // Bars: spring up one after another, then fold down just before the loop restarts.
-    var fold = t > TOTAL - FOLD ? clamp01((t - (TOTAL - FOLD)) / (FOLD - 0.1)) : 0;
-    var foldEase = fold * fold * (3 - 2 * fold);
-    bars.forEach(function (b) {
+    // Scroll position.
+    var s = stops(), y;
+    if (t < CHART_HOLD) y = s[0];
+    else if (t < CHART_HOLD + SCROLL) y = lerp(s[0], s[1], easeScroll((t - CHART_HOLD) / SCROLL));
+    else if (t < CHART_HOLD + SCROLL + TEXT_HOLD) y = s[1];
+    else y = lerp(s[1], s[2], easeScroll((t - CHART_HOLD - SCROLL - TEXT_HOLD) / SCROLL));
+    pageEl.style.transform = 'translate3d(0,' + (-y).toFixed(2) + 'px,0)';
+    // Bars: spring up one after another once the chart is in view; the copy stays empty,
+    // matching the first chart at t = 0, so the wrap is invisible.
+    drawBars(bars, t);
+    drawBars(bars2, 0);
+  }
+  function drawBars(list, t) {
+    list.forEach(function (b) {
       var g = barSpring(t - DELAY - b.i * 0.1);
-      b.bar.style.height = Math.max(0, b.h * g * (1 - foldEase)).toFixed(2) + 'px';
+      b.bar.style.height = Math.max(0, b.h * g).toFixed(2) + 'px';
       var pctIn = clamp01((t - DELAY - (DURATION / 2 + b.i * 0.1)) / 0.3);
-      var labelIn = clamp01((t - DELAY - (DURATION / 3 + b.i * 0.1)) / 0.5);
-      b.pct.style.opacity = (pctIn * (1 - foldEase)).toFixed(3);
-      b.label.style.opacity = labelIn.toFixed(3);
+      b.pct.style.opacity = pctIn.toFixed(3);
     });
   }
 
