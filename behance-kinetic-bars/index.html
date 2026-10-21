@@ -77,7 +77,7 @@ body { display: grid; place-items: center; overflow: hidden; font-family: 'Inter
   // --- Kinetic Text Swapper defaults ---
   var WORDS = ['Experiences', 'Systems', 'Interfaces', 'Platforms'];
   var INTERVAL = 2.5;                                   // swap time (s), the component default
-  var WORD_OFFSET = 3;                                  // lines the swaps up so the headline arrives on "Experiences"
+  var WORD_OFFSET = 3.6;                                  // lines the swaps up so the headline arrives on "Experiences"
   // "True 3D Roll" variant
   var FROM = { opacity: 0, rotateX: -90, y: 40, z: -50 }, AT = { opacity: 1, rotateX: 0, y: 0, z: 0 },
       TO = { opacity: 0, rotateX: 90, y: -40, z: -50 };
@@ -92,8 +92,8 @@ body { display: grid; place-items: center; overflow: hidden; font-family: 'Inter
   var MAX_H = 480, MIN_H = 60, DELAY = 0.2, DURATION = 0.8;
   // Scroll timeline: hold on the chart while the bars rise, scroll down to the headline,
   // hold while the words roll, then scroll back up to the chart and start again.
-  var CHART_HOLD = 6, SCROLL = 2, TEXT_HOLD = 10;
-  var TOTAL = CHART_HOLD + SCROLL + TEXT_HOLD + SCROLL; // 20 s = 8 word swaps
+  var CHART_HOLD = 6, SCROLL = 1.4, TEXT_HOLD = 10;
+  var TOTAL = CHART_HOLD + SCROLL + TEXT_HOLD + SCROLL; // 18.8 s; the wrap happens on the chart, so the words never visibly jump
   // While the headline holds, the bars sink back down so the chart returns empty and regrows.
   var SINK_AT = CHART_HOLD + SCROLL + 4, SINK = 1.4;
 
