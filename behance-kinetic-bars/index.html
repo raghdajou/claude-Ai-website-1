@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap" rel="stylesheet">
 <style>
 /* Two Framer components on one 1400 x 788 Behance artboard, light mode, in the Foxlytics lime:
-   "BarGraph" first, then "Kinetic Text Swapper" (3D roll) 200px below it. The artboard scrolls
+   "BarGraph" first, then "Kinetic Text Swapper" (3D roll) 400px below it, far enough that the two never share the frame. The artboard scrolls
    down from the chart to the headline, then back up to the chart for the loop. */
 :root {
   --lime: #daf17e;          /* the colour from the reference swatch */
@@ -24,8 +24,8 @@ html, body { margin: 0; height: 100%; background: var(--page); }
 body { display: grid; place-items: center; overflow: hidden; font-family: 'Inter', sans-serif; }
 .frame { position: relative; overflow: hidden; }
 .artboard { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; background: var(--page); transform-origin: 0 0; overflow: hidden; }
-/* The scrolling page: chart, 200px, headline. */
-.page { position: absolute; left: 0; top: 0; width: 1400px; display: flex; flex-direction: column; align-items: center; gap: 200px; will-change: transform; }
+/* The scrolling page: chart, 400px, headline. */
+.page { position: absolute; left: 0; top: 0; width: 1400px; display: flex; flex-direction: column; align-items: center; gap: 400px; will-change: transform; }
 
 /* Kinetic Text Swapper: 72px, 600, 1.1em, -2px, 0.25em gap, centred */
 .swapper {
