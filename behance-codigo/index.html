@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&display=swap" rel="stylesheet">
 <style>
 /* The Framer "Codigo" component (AIChatPrompt, Claude style) in its light theme, scaled 1.5x
-   to fill a 1400 x 788 Behance artboard. Title 2 is rewritten for an AI-supported HR system. */
+   to fill a 1400 x 788 Behance artboard. Both titles are rewritten for an AI-supported HR system. */
 html, body { margin: 0; height: 100%; background: #f7f7f4; }
 body { display: grid; place-items: center; overflow: hidden; }
 .frame { position: relative; overflow: hidden; }
@@ -52,7 +52,7 @@ await document.fonts.load("500 36px 'Hedvig Letters Serif'")
 // letters x 40ms + 400ms + 2.5s, then fades up and out before the next one types in),
 // so the slide plays, and exports, frame for frame.
 const FONT = { fontSize: 36, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: '1.2em' }
-const TITLES = ['How Can I Help You?', 'What HR task can AI take on today?']
+const TITLES = ['HR, without the busywork.', 'What HR task can AI take on today?']
 createRoot(document.getElementById('stage')).render(createElement(AIChatPrompt, {
   ...AIChatPrompt.defaultProps,
   theme: 'light', font: FONT,
