@@ -21,7 +21,7 @@ body { display: grid; place-items: center; overflow: hidden; }
   // moving it one frame at a time makes every exported frame exact.
   (function () {
     if (!/[?&]capture/.test(location.search)) return;
-    var clock = 0, videos = [];
+    var clock = 0, videos = window.__videos = [];   // exposed for checking the seeks
     performance.now = function () { return clock; };
     // Videos are held still and seeked to each frame's time, so they stay in step with the stream.
     var make = document.createElement.bind(document);
