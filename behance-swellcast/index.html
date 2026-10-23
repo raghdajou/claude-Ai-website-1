@@ -6,10 +6,10 @@
 <title>Swellcast Stream Slide</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500&family=Noto+Serif:wght@400&display=swap" rel="stylesheet">
 <style>
 /* The Framer "Swellcastpro" component (curved WebGL card streams around a centre line),
-   run from its own source with its default settings and artwork, filling a 1400 x 788 Behance artboard. */
+   run from its own source with the cards and settings of its own preview, filling a 1400 x 788 Behance artboard. */
 html, body { margin: 0; height: 100%; background: #ffffff; }
 body { display: grid; place-items: center; overflow: hidden; }
 .frame { position: relative; overflow: hidden; }
@@ -21,18 +21,30 @@ body { display: grid; place-items: center; overflow: hidden; }
   // moving it one frame at a time makes every exported frame exact.
   (function () {
     if (!/[?&]capture/.test(location.search)) return;
-    var clock = 0;
+    var clock = 0, videos = [];
     performance.now = function () { return clock; };
+    // Videos are held still and seeked to each frame's time, so they stay in step with the stream.
+    var make = document.createElement.bind(document);
+    document.createElement = function (tag) { var el = make(tag); if (String(tag).toLowerCase() === 'video') videos.push(el); return el; };
+    HTMLMediaElement.prototype.play = function () { return Promise.resolve(); };
+    function seekAll(t) {
+      return Promise.all(videos.map(function (v) {
+        if (!(v.duration > 0)) return null;
+        var to = t % v.duration;
+        if (Math.abs(v.currentTime - to) < 0.001) return null;
+        return new Promise(function (r) { v.addEventListener('seeked', r, { once: true }); v.currentTime = to; });
+      }));
+    }
     function nextFrame() { return new Promise(function (r) { requestAnimationFrame(function () { r(); }); }); }
     window.__render = function (t) {
       clock = t * 1000;
-      return nextFrame().then(nextFrame);   // the component draws on the next frame
+      return seekAll(t).then(nextFrame).then(nextFrame);   // the component draws on the next frame
     };
     // Same, but returns the card layer as a PNG, read in the frame it was drawn
     // (the text line is static, so the exports lay it over separately).
     window.__grab = function (t) {
       clock = t * 1000;
-      return nextFrame().then(function () {
+      return seekAll(t).then(nextFrame).then(function () {
         return new Promise(function (r) {
           requestAnimationFrame(function () { r(document.querySelector('#artboard canvas').toDataURL('image/png')); });
         });
@@ -58,8 +70,15 @@ import { createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 import SwellCastPro from './Swellcastpro.js'
 
-// The component's own 8 default cards: with no media set it paints its built-in artwork.
-const CARDS = new Array(8).fill(0).map((_, i) => ({ media: 'image', title: 'Card ' + (i + 1) }))
+// The cards and settings of the component's own preview (cmscinecarousel.framer.website), in its order.
+const img = (f) => ({ media: 'image', imageUrl: 'media/' + f })
+const vid = (f) => ({ media: 'video', videoUrl: 'media/' + f })
+const CARDS = [
+  vid('dClAqDx2W8igpK6WWr06wAwO54.mp4'), img('pLUObTAIfqae6WJvpWZVx3duqI.jpg'), vid('Si2greUevJiHi6oAFeyocny57Os.mp4'),
+  img('DOM6rPghGP50B8tmnd4bPkpjZg.jpg'), vid('7JrhK5Uof6y4FDb3CXqvIRQhp0.mp4'), img('BBVl3oMbbyatgoiMtZi1LSV6Is.jpg'),
+  vid('cbJXESByYmYpoE0U1wSRXQo8Jw.mp4'), img('XYgIVGzlz746vCA7Vfu8JltmvI.jpeg'), vid('zwhm2Zgqpv93wZujL7DUBCHeCc.mp4'),
+  vid('N8kdPg4NGcfXFjPp8nHYC3oaU.mp4'), img('Fo9a0bYHTClDwFwVn8BpL7yWnQ.jpg'), vid('inpAyNGPVOgtGFhmFZ60nPhY.mp4')
+].map((c, i) => ({ ...c, title: 'Card ' + (i + 1) }))
 const FLOW = 0.35   // component default, cards per second
 // The stream repeats once it has moved on by one full set of cards.
 const TOTAL = CARDS.length / FLOW
@@ -73,18 +92,22 @@ function fit() {
 }
 fit(); addEventListener('resize', fit)
 
-await document.fonts.ready
+const stills = CARDS.filter((c) => c.imageUrl).map((c) => { const i = new Image(); i.src = c.imageUrl; return i.decode().catch(() => {}) })
+await Promise.all([...stills, document.fonts.ready])
 createRoot(artboard).render(createElement(SwellCastPro, {
   cards: CARDS,
-  lineFont: { fontFamily: "'Inter', sans-serif", fontSize: 34, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: '1.1em' },
-  accentFont: { fontSize: 34, letterSpacing: '-0.01em', lineHeight: '1.1em' },
+  textX: 62,
+  lineFont: { fontFamily: "'Inter', sans-serif", fontSize: 44, fontStyle: 'normal', fontWeight: 500, letterSpacing: '-0.03em', lineHeight: '1.1em' },
+  accentFont: { fontFamily: "'Noto Serif', serif", fontSize: 34, fontStyle: 'normal', fontWeight: 400, letterSpacing: '-0.01em', lineHeight: '1.1em' },
+  textColor: 'rgb(17, 17, 17)', accentColor: 'rgb(17, 17, 17)',
+  startSize: 0.3, endSize: 0.51, gap: 30, ratio: 1.12, spread: 1.25, maxVideos: 15,
   flow: FLOW,
   drag: !capture, wheel: !capture, vScroll: capture ? 'off' : 'page',
 }))
 if (capture) {
   window.__TOTAL = TOTAL
   // let the component upload its textures before the first frame is taken
-  setTimeout(() => window.__render(0).then(() => { window.__ready = true }), 1500)
+  setTimeout(() => window.__render(0).then(() => { window.__ready = true }), 4000)
 }
 </script>
 </body>
