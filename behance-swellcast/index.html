@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500&display=swap" rel="stylesheet">
 <style>
 /* The Framer "Swellcastpro" component (curved WebGL card streams around a centre line),
-   run from its own source with its default settings, filling a 1400 x 788 Behance artboard. */
+   run from its own source with its default settings and artwork, filling a 1400 x 788 Behance artboard. */
 html, body { margin: 0; height: 100%; background: #ffffff; }
 body { display: grid; place-items: center; overflow: hidden; }
 .frame { position: relative; overflow: hidden; }
@@ -27,6 +27,16 @@ body { display: grid; place-items: center; overflow: hidden; }
     window.__render = function (t) {
       clock = t * 1000;
       return nextFrame().then(nextFrame);   // the component draws on the next frame
+    };
+    // Same, but returns the card layer as a PNG, read in the frame it was drawn
+    // (the text line is static, so the exports lay it over separately).
+    window.__grab = function (t) {
+      clock = t * 1000;
+      return nextFrame().then(function () {
+        return new Promise(function (r) {
+          requestAnimationFrame(function () { r(document.querySelector('#artboard canvas').toDataURL('image/png')); });
+        });
+      });
     };
   })();
 </script>
@@ -48,10 +58,11 @@ import { createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 import SwellCastPro from './Swellcastpro.js'
 
-const PHOTOS = ['photo-78', 'photo-81', 'photo-82', 'photo-83', 'photo-84', 'photo-85'].map((n) => `images/${n}.jpg`)
+// The component's own 8 default cards: with no media set it paints its built-in artwork.
+const CARDS = new Array(8).fill(0).map((_, i) => ({ media: 'image', title: 'Card ' + (i + 1) }))
 const FLOW = 0.35   // component default, cards per second
 // The stream repeats once it has moved on by one full set of cards.
-const TOTAL = PHOTOS.length / FLOW
+const TOTAL = CARDS.length / FLOW
 
 const artboard = document.getElementById('artboard'), frame = document.getElementById('frame')
 const capture = /[?&]capture/.test(location.search)
@@ -62,10 +73,9 @@ function fit() {
 }
 fit(); addEventListener('resize', fit)
 
-const loaded = Promise.all(PHOTOS.map((src) => { const i = new Image(); i.src = src; return i.decode().catch(() => {}) }))
-await Promise.all([loaded, document.fonts.ready])
+await document.fonts.ready
 createRoot(artboard).render(createElement(SwellCastPro, {
-  cards: PHOTOS.map((src, i) => ({ media: 'image', imageUrl: src, title: 'Photo ' + (i + 1) })),
+  cards: CARDS,
   lineFont: { fontFamily: "'Inter', sans-serif", fontSize: 34, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: '1.1em' },
   accentFont: { fontSize: 34, letterSpacing: '-0.01em', lineHeight: '1.1em' },
   flow: FLOW,
