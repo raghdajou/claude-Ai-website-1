@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Chat Prompt Slide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&display=swap" rel="stylesheet">
+<style>
+/* The Framer "Codigo" component (AIChatPrompt, Claude style) in its light theme, scaled 1.5x
+   to fill a 1400 x 788 Behance artboard. Title 2 is rewritten for an AI-supported HR system. */
+html, body { margin: 0; height: 100%; background: #f7f7f4; }
+body { display: grid; place-items: center; overflow: hidden; }
+.frame { position: relative; overflow: hidden; }
+.artboard { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; background: #f7f7f4; transform-origin: 0 0; }
+.stage { position: absolute; left: 0; top: 0; width: 933.33px; height: 525.33px; transform: scale(1.5); transform-origin: 0 0; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://cdn.jsdelivr.net/npm/react@18.3.1/+esm",
+    "react/jsx-runtime": "https://cdn.jsdelivr.net/npm/react@18.3.1/jsx-runtime/+esm",
+    "react-dom/client": "https://cdn.jsdelivr.net/npm/react-dom@18.3.1/client/+esm",
+    "framer-motion": "https://cdn.jsdelivr.net/npm/framer-motion@11.11.17/+esm",
+    "framer": "./framer-shim.js"
+  }
+}
+</script>
+</head>
+<body>
+<div class="frame" id="frame"><div class="artboard" id="artboard"><div class="stage" id="stage"></div></div></div>
+<script type="module">
+import { createElement } from 'react'
+import { createRoot } from 'react-dom/client'
+import AIChatPrompt from './Codigo.js'
+
+const artboard = document.getElementById('artboard'), frame = document.getElementById('frame')
+const capture = /[?&]capture/.test(location.search)
+function fit() {
+  const k = capture ? 1 : Math.min(innerWidth / 1400, innerHeight / 788)
+  artboard.style.transform = `scale(${k})`
+  frame.style.width = 1400 * k + 'px'; frame.style.height = 788 * k + 'px'
+}
+fit(); addEventListener('resize', fit)
+
+await document.fonts.load("500 36px 'Hedvig Letters Serif'")
+
+// The component itself draws the input box and the label row (Claude style, light theme).
+// Its two titles are drawn here on a timeline that follows the component's own logic
+// (typing: each letter fades in over 0.2s, 0.04s apart; each title holds for
+// letters x 40ms + 400ms + 2.5s, then fades up and out before the next one types in),
+// so the slide plays, and exports, frame for frame.
+const FONT = { fontSize: 36, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: '1.2em' }
+const TITLES = ['How Can I Help You?', 'What HR task can AI take on today?']
+createRoot(document.getElementById('stage')).render(createElement(AIChatPrompt, {
+  ...AIChatPrompt.defaultProps,
+  theme: 'light', font: FONT,
+  titleText: '', titleText2: '',
+}))
+
+const EXIT = 0.35
+const hold = (s) => (s.length * 40 + 400 + 2500) / 1000
+const H1 = hold(TITLES[0]), TOTAL = H1 + hold(TITLES[1])
+// One cycle, starting where the component switches back to title 1: title 2 fades out,
+// title 1 types in, then at H1 it fades out and title 2 types in until the next switch.
+const PHASES = [{ start: EXIT, out: H1 }, { start: H1 + EXIT, out: TOTAL }]
+
+function bezier(p1x, p1y, p2x, p2y) {
+  const c = (a, b, t) => 3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t
+  return (x) => {
+    if (x <= 0) return 0; if (x >= 1) return 1
+    let lo = 0, hi = 1, t = x
+    for (let i = 0; i < 30; i++) { t = (lo + hi) / 2; if (c(p1x, p2x, t) < x) lo = t; else hi = t }
+    return c(p1y, p2y, t)
+  }
+}
+const ease = bezier(0.25, 0.1, 0.25, 1)
+
+// wait for the component's markup, then put the title layer into its (empty) title slot
+let slot = null
+while (!(slot = document.querySelector('#stage h1'))) await new Promise((r) => setTimeout(r, 30))
+const wrap = slot.parentElement
+wrap.style.position = 'relative'
+const titleEls = TITLES.map((text) => {
+  const h = document.createElement('h1')
+  Object.assign(h.style, { margin: 0, textAlign: 'center', color: '#000000', fontFamily: "'Hedvig Letters Serif', serif",
+    fontSize: '36px', fontWeight: 500, letterSpacing: '-0.02em', lineHeight: '1.2em', whiteSpace: 'nowrap',
+    position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' })
+  const spans = text.split('').map((ch) => {
+    const s = document.createElement('span')
+    s.textContent = ch
+    Object.assign(s.style, { display: 'inline-block', whiteSpace: ch === ' ' ? 'pre' : 'normal', opacity: 0 })
+    h.appendChild(s); return s
+  })
+  wrap.appendChild(h)
+  return { h, spans, text }
+})
+
+function render(time) {
+  const t = ((time % TOTAL) + TOTAL) % TOTAL
+  titleEls.forEach((T, k) => {
+    const { start, out } = PHASES[k]
+    // title 2's fade-out runs past the end of the cycle, into the start of the next one
+    const u = k === 1 && t < EXIT ? t + TOTAL : t
+    const shown = u >= start && u < out + EXIT
+    T.h.style.visibility = shown ? 'visible' : 'hidden'
+    if (!shown) return
+    T.spans.forEach((s, i) => { s.style.opacity = ease((u - start - i * 0.04) / 0.2).toFixed(3) })
+    const fade = ease((u - out) / EXIT)
+    T.h.style.opacity = (1 - fade).toFixed(3)
+    T.h.style.transform = `translate(-50%, calc(-50% + ${(-10 * fade).toFixed(2)}px))`
+  })
+}
+render(0)
+
+if (capture) {
+  window.__TOTAL = TOTAL; window.__render = render
+  setTimeout(() => { window.__ready = true }, 1200)   // let the component's own fade-in finish
+} else {
+  let t0 = 0
+  const tick = (now) => { if (!t0) t0 = now; render((now - t0) / 1000); requestAnimationFrame(tick) }
+  requestAnimationFrame(tick)
+}
+</script>
+</body>
+</html>
