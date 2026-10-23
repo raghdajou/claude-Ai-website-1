@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swellcast Stream Slide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500&display=swap" rel="stylesheet">
+<style>
+/* The Framer "Swellcastpro" component (curved WebGL card streams around a centre line),
+   run from its own source with its default settings, filling a 1400 x 788 Behance artboard. */
+html, body { margin: 0; height: 100%; background: #ffffff; }
+body { display: grid; place-items: center; overflow: hidden; }
+.frame { position: relative; overflow: hidden; }
+.artboard { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; background: #ffffff; transform-origin: 0 0; }
+</style>
+<script>
+  // ?capture: a manual clock so frames can be rendered one by one for the exports.
+  // The component reads performance.now() for its frame timing, so holding that clock and
+  // moving it one frame at a time makes every exported frame exact.
+  (function () {
+    if (!/[?&]capture/.test(location.search)) return;
+    var clock = 0;
+    performance.now = function () { return clock; };
+    function nextFrame() { return new Promise(function (r) { requestAnimationFrame(function () { r(); }); }); }
+    window.__render = function (t) {
+      clock = t * 1000;
+      return nextFrame().then(nextFrame);   // the component draws on the next frame
+    };
+  })();
+</script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://cdn.jsdelivr.net/npm/react@18.3.1/+esm",
+    "react/jsx-runtime": "https://cdn.jsdelivr.net/npm/react@18.3.1/jsx-runtime/+esm",
+    "react-dom/client": "https://cdn.jsdelivr.net/npm/react-dom@18.3.1/client/+esm",
+    "framer": "./framer-shim.js"
+  }
+}
+</script>
+</head>
+<body>
+<div class="frame" id="frame"><div class="artboard" id="artboard"></div></div>
+<script type="module">
+import { createElement } from 'react'
+import { createRoot } from 'react-dom/client'
+import SwellCastPro from './Swellcastpro.js'
+
+const PHOTOS = ['photo-78', 'photo-81', 'photo-82', 'photo-83', 'photo-84', 'photo-85'].map((n) => `images/${n}.jpg`)
+const FLOW = 0.35   // component default, cards per second
+// The stream repeats once it has moved on by one full set of cards.
+const TOTAL = PHOTOS.length / FLOW
+
+const artboard = document.getElementById('artboard'), frame = document.getElementById('frame')
+const capture = /[?&]capture/.test(location.search)
+function fit() {
+  const k = capture ? 1 : Math.min(innerWidth / 1400, innerHeight / 788)
+  artboard.style.transform = `scale(${k})`
+  frame.style.width = 1400 * k + 'px'; frame.style.height = 788 * k + 'px'
+}
+fit(); addEventListener('resize', fit)
+
+const loaded = Promise.all(PHOTOS.map((src) => { const i = new Image(); i.src = src; return i.decode().catch(() => {}) }))
+await Promise.all([loaded, document.fonts.ready])
+createRoot(artboard).render(createElement(SwellCastPro, {
+  cards: PHOTOS.map((src, i) => ({ media: 'image', imageUrl: src, title: 'Photo ' + (i + 1) })),
+  lineFont: { fontFamily: "'Inter', sans-serif", fontSize: 34, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: '1.1em' },
+  accentFont: { fontSize: 34, letterSpacing: '-0.01em', lineHeight: '1.1em' },
+  flow: FLOW,
+  drag: !capture, wheel: !capture, vScroll: capture ? 'off' : 'page',
+}))
+if (capture) {
+  window.__TOTAL = TOTAL
+  // let the component upload its textures before the first frame is taken
+  setTimeout(() => window.__render(0).then(() => { window.__ready = true }), 1500)
+}
+</script>
+</body>
+</html>
