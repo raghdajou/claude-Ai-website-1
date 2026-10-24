@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&display=swap" rel="stylesheet">
 <style>
 /* The Framer "Codigo" component (AIChatPrompt, Claude style) in its light theme, scaled 1.5x
-   to fill a 1400 x 788 Behance artboard. Both titles are rewritten for an AI-supported HR system. */
+   to fill a 1400 x 788 Behance artboard. Title 2, the prompt and the labels are rewritten for Foxlytics (HR analytics, payroll, projects). */
 html, body { margin: 0; height: 100%; background: #f7f7f4; }
 body { display: grid; place-items: center; overflow: hidden; }
 .frame { position: relative; overflow: hidden; }
@@ -52,11 +52,12 @@ await document.fonts.load("500 36px 'Hedvig Letters Serif'")
 // letters x 40ms + 400ms + 2.5s, then fades up and out before the next one types in),
 // so the slide plays, and exports, frame for frame.
 const FONT = { fontSize: 36, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: '1.2em' }
-const TITLES = ['HR, without the busywork.', 'What HR task can AI take on today?']
+const TITLES = ['How Can I Help You?', 'Ask about payroll, people or projects.']
 createRoot(document.getElementById('stage')).render(createElement(AIChatPrompt, {
   ...AIChatPrompt.defaultProps,
   theme: 'light', font: FONT,
   titleText: '', titleText2: '',
+  placeholderText: 'Ask Foxlytics...',
 }))
 
 const EXIT = 0.35
@@ -82,6 +83,35 @@ let slot = null
 while (!(slot = document.querySelector('#stage h1'))) await new Promise((r) => setTimeout(r, 30))
 const wrap = slot.parentElement
 wrap.style.position = 'relative'
+
+// Foxlytics labels under the box, in place of the component's Claude labels (same chip styling,
+// icons drawn in the same 256-unit Phosphor style).
+const icon = (d) => `<svg width="16" height="16" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`
+const LABELS = [
+  ['HR Analytics', icon('<path d="M40 216H216"/><path d="M72 176V120"/><path d="M128 176V72"/><path d="M184 176V136"/>')],
+  ['Payroll', icon('<rect x="24" y="64" width="208" height="128" rx="8"/><circle cx="128" cy="128" r="28"/><path d="M64 96V160"/><path d="M192 96V160"/>')],
+  ['Projects', icon('<path d="M32 80V200H224V96H128L104 64H32Z"/><path d="M32 112H224"/>')],
+  ['Team insights', icon('<circle cx="96" cy="104" r="36"/><path d="M32 200C40 168 64 152 96 152S152 168 160 200"/><circle cx="176" cy="88" r="28"/><path d="M168 136C200 136 220 152 228 184"/>')],
+  ["Foxlytics' choice", null],
+]
+const chips = [...document.querySelectorAll('#stage button')].filter((b) => b.querySelector('span') && /Code|Write|Learn|Personal matters|Claude's choice/.test(b.textContent))
+chips.forEach((b, i) => {
+  const [label, svg] = LABELS[i]
+  b.querySelector('span').textContent = label
+  if (svg) { const old = b.querySelector('svg'); old.insertAdjacentHTML('afterend', svg); old.nextElementSibling.style.color = getComputedStyle(old).fill || ''; old.remove() }
+})
+// The model picker names Foxlytics' own assistant instead of a Claude model.
+for (const sp of document.querySelectorAll('#stage span')) {
+  if (sp.textContent === 'Sonnet 4.6') sp.textContent = 'Foxlytics AI'
+  else if (sp.textContent === 'Low') sp.textContent = 'Fast'
+}
+// A blinking text cursor at the start of the prompt, as if the box is focused.
+const area = document.querySelector('#stage textarea')
+area.parentElement.style.position = 'relative'
+const caret = document.createElement('div')
+Object.assign(caret.style, { position: 'absolute', width: '1.5px', height: '22px', background: '#111111',
+  left: (area.offsetLeft + 5) + 'px', top: (area.offsetTop + 9) + 'px' })
+area.parentElement.appendChild(caret)
 const titleEls = TITLES.map((text) => {
   const h = document.createElement('h1')
   Object.assign(h.style, { margin: 0, textAlign: 'center', color: '#000000', fontFamily: "'Hedvig Letters Serif', serif",
@@ -99,6 +129,7 @@ const titleEls = TITLES.map((text) => {
 
 function render(time) {
   const t = ((time % TOTAL) + TOTAL) % TOTAL
+  caret.style.opacity = (t % 1.06) < 0.53 ? 1 : 0
   titleEls.forEach((T, k) => {
     const { start, out } = PHASES[k]
     // title 2's fade-out runs past the end of the cycle, into the start of the next one
