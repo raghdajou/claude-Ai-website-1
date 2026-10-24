@@ -15,12 +15,15 @@ html, body { margin: 0; height: 100%; background: #f7f7f4; }
 body { display: grid; place-items: center; overflow: hidden; }
 .frame { position: relative; overflow: hidden; }
 .artboard { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; background: #f7f7f4; transform-origin: 0 0; }
-.stage { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; }
-/* Filament Flower behind everything: drawn white-on-black by the component, then inverted and
-   multiplied into the page, so its blue background is gone and the filaments read as fine dark lines. */
+.stage { position: absolute; left: 0; top: 70px; width: 1400px; height: 788px; }   /* moved down with the flower so the whole composition is centred */
+/* Filament Flower behind everything, centred and sized so its whole ring and labels show. It is drawn
+   exactly as the component draws it (light adding up on a dark ground), then inverted and multiplied
+   into the page: every brightness change becomes a change in blue, so the travelling waves still
+   shimmer and the bright centre becomes a dense deep-blue star. */
 .flower { position: absolute; filter: invert(1); mix-blend-mode: multiply;
-  /* sized so the flower's ring (0.88 of the box) spans the full 1400px width of the artboard */
-  width: 1591px; height: 1591px; left: -95.5px; top: -401.5px; }
+  /* a 636px square (ring radius 280px) whose centre, and its star, sits in the open gap between
+     the headline and the box; ring and labels stay inside the artboard */
+  width: 636px; height: 636px; left: 382px; top: 76px; }
 </style>
 <script type="importmap">
 {
@@ -47,7 +50,8 @@ const capture = /[?&]capture/.test(location.search)
 if (capture) {
   // the flower draws on request, and its random layout and labels repeat run to run
   window.__flowerManual = true
-  let seed = 7; Math.random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
+  let s = 0x9e3779b9   // mulberry32
+  Math.random = () => { s = (s + 0x6d2b79f5) | 0; let x = Math.imul(s ^ (s >>> 15), 1 | s); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296 }
 }
 let H = 788
 function fit() {
@@ -73,14 +77,16 @@ createRoot(document.getElementById('stage')).render(createElement(AIChatPrompt, 
   placeholderText: 'Ask Foxlytics...',
 }))
 
-// The Filament Flower as the background, with its own motion and defaults. Colours are given as the
-// inverse of what shows, because the layer is inverted: a black ground becomes the page, and
-// #E5B93B lines / #856A1F labels become the component's own blue #1A46C4 and a lighter #7A95E0.
-// Overlapping lines still add up as in the component, so the core reads as a deeper blue.
-// Line opacity is raised so the filaments still read on a light page.
+// The Filament Flower as the background, with the settings of its own demo (filament-flower.framer.website):
+// 240 filaments, 12 petals, the demo's labels and motion (spin 0.014, curve drift 0.4, waves 2.2 / 3).
+// Colours are given inverted: a black ground becomes the page, and rgb(255, 202, 87) lines become the
+// component's blue rgb(0, 53, 168), deepening to navy where many cross, as the demo whitens to a star.
+// Line opacity is raised from the demo's 0.16 to 0.34 so the threads read as clearly on a light page.
 createRoot(document.getElementById('flower')).render(createElement(FilamentFlower, {
   ...FilamentFlower.defaultProps,
-  background: '#000000', lineColor: '#E5B93B', labelColor: '#856A1F', lineOpacity: 0.34,
+  background: '#000000', lineColor: 'rgb(255, 202, 87)', labelColor: 'rgb(255, 202, 87)',
+  nodes: 240, petals: 12, lineOpacity: 0.34,
+  labels: ['BRANDING', 'IDENTITY', 'WEB DESIGN', 'ART DIRECTION', 'VISUAL SYSTEMS', 'UX DESIGN', 'STRATEGY', 'FRAMER'],
 }))
 
 const EXIT = 0.35
@@ -128,7 +134,9 @@ chips.forEach((b, i) => {
 // then + and model icons on the left, model picker, mic and a black send button on the right.
 const POP = "'Inter', sans-serif"
 const box = document.querySelector('#stage textarea').parentElement
-Object.assign(box.style, { borderRadius: '26px', padding: '24px 22px 18px 40px', gap: '0px' })
+// frosted glass, so the flower's glowing centre shows through the box
+Object.assign(box.style, { borderRadius: '26px', padding: '24px 22px 18px 40px', gap: '0px',
+  backgroundColor: 'rgba(255, 255, 255, 0.62)', backdropFilter: 'blur(10px) saturate(140%)', WebkitBackdropFilter: 'blur(10px) saturate(140%)' })
 const stroke = (d, size = 18) => `<svg width="${size}" height="${size}" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`
 box.innerHTML = `
   <div style="display:flex;align-items:center;gap:8px;font-family:${POP};font-weight:600;font-size:21px;line-height:1.2;color:#3f3f46;letter-spacing:-0.01em">
