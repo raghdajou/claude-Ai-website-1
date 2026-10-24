@@ -16,13 +16,12 @@ body { display: grid; place-items: center; overflow: hidden; }
 .frame { position: relative; overflow: hidden; }
 .artboard { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; background: #f7f7f4; transform-origin: 0 0; }
 .stage { position: absolute; left: 0; top: 70px; width: 1400px; height: 788px; }   /* moved down with the flower so the whole composition is centred */
-/* Filament Flower behind everything, centred and sized so its whole ring and labels show. It is drawn
-   exactly as the component draws it (light adding up on a dark ground), then inverted and multiplied
-   into the page: every brightness change becomes a change in blue, so the travelling waves still
-   shimmer and the bright centre becomes a dense deep-blue star. */
-.flower { position: absolute; filter: invert(1); mix-blend-mode: multiply;
-  /* a 636px square (ring radius 280px) whose centre, and its star, sits in the open gap between
-     the headline and the box; ring and labels stay inside the artboard */
+/* Filament Flower behind everything. It is drawn exactly as the component draws it (white light
+   adding up on a dark ground), then its brightness is mapped onto blue by the #spark filter below:
+   faint threads become the component's blue, and where threads cross or a wave crest passes, the
+   added light glows through brighter blue to a pale electric halo, so the sparkle survives on a
+   light page. A 636px square (ring radius 280px) centred on the gap between headline and box. */
+.flower { position: absolute; filter: url(#spark);
   width: 636px; height: 636px; left: 382px; top: 76px; }
 </style>
 <script type="importmap">
@@ -38,6 +37,30 @@ body { display: grid; place-items: center; overflow: hidden; }
 </script>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute">
+  <filter id="spark" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <!-- a hair of smoothing, so the light doubled where line segments join does not read as grain -->
+    <feGaussianBlur in="SourceGraphic" stdDeviation="0.6" result="S"/>
+    <!-- brightness of the component's drawing -->
+    <feColorMatrix in="S" type="matrix" values="0.333 0.333 0.333 0 0  0.333 0.333 0.333 0 0  0.333 0.333 0.333 0 0  0 0 0 0 1" result="L"/>
+    <!-- colour ramp: blue for faint threads, brighter towards the dense crossings -->
+    <feComponentTransfer in="L" result="C">
+      <feFuncR type="table" tableValues="0.10 0.10 0.10 0.12 0.18 0.32 0.55 0.80 0.95"/>
+      <feFuncG type="table" tableValues="0.27 0.27 0.28 0.33 0.42 0.57 0.74 0.89 0.97"/>
+      <feFuncB type="table" tableValues="0.77 0.77 0.78 0.84 0.93 1 1 1 1"/>
+    </feComponentTransfer>
+    <!-- coverage: brightness lifted so single threads read clearly -->
+    <feColorMatrix in="L" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0" result="A0"/>
+    <feComponentTransfer in="A0" result="A"><feFuncA type="table" tableValues="0 0.62 0.86 0.96 1"/></feComponentTransfer>
+    <feComposite in="C" in2="A" operator="in" result="lines"/>
+    <!-- glow: only the brightest light, blurred into an electric-blue halo -->
+    <feComponentTransfer in="A0" result="hi"><feFuncA type="table" tableValues="0 0 0 0.05 0.35 0.75 1"/></feComponentTransfer>
+    <feGaussianBlur in="hi" stdDeviation="5" result="hib"/>
+    <feFlood flood-color="#3d74ff" flood-opacity="0.85"/>
+    <feComposite in2="hib" operator="in" result="glow"/>
+    <feMerge><feMergeNode in="glow"/><feMergeNode in="lines"/></feMerge>
+  </filter>
+</svg>
 <div class="frame" id="frame"><div class="artboard" id="artboard"><div class="flower" id="flower"></div><div class="stage" id="stage"></div></div></div>
 <script type="module">
 import { createElement } from 'react'
@@ -79,13 +102,12 @@ createRoot(document.getElementById('stage')).render(createElement(AIChatPrompt, 
 
 // The Filament Flower as the background, with the settings of its own demo (filament-flower.framer.website):
 // 240 filaments, 12 petals, the demo's labels and motion (spin 0.014, curve drift 0.4, waves 2.2 / 3).
-// Colours are given inverted: a black ground becomes the page, and rgb(255, 202, 87) lines become the
-// component's blue rgb(0, 53, 168), deepening to navy where many cross, as the demo whitens to a star.
-// Line opacity is raised from the demo's 0.16 to 0.34 so the threads read as clearly on a light page.
+// Drawn in the demo's own colours (white lines and labels, at its 0.16 line opacity) on black;
+// the #spark filter turns that light into blue on the page.
 createRoot(document.getElementById('flower')).render(createElement(FilamentFlower, {
   ...FilamentFlower.defaultProps,
-  background: '#000000', lineColor: 'rgb(255, 202, 87)', labelColor: 'rgb(255, 202, 87)',
-  nodes: 240, petals: 12, lineOpacity: 0.34, ringDots: false,   // ring of dots off; labels keep their places
+  background: '#000000', lineColor: '#ffffff', labelColor: '#ffffff',
+  nodes: 240, petals: 12, lineOpacity: 0.16, ringDots: false,   // ring of dots off; labels keep their places
   labels: ['BRANDING', 'IDENTITY', 'WEB DESIGN', 'ART DIRECTION', 'VISUAL SYSTEMS', 'UX DESIGN', 'STRATEGY', 'FRAMER'],
 }))
 
