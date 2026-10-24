@@ -9,12 +9,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&display=swap" rel="stylesheet">
 <style>
 /* The Framer "Codigo" component (AIChatPrompt, Claude style) in its light theme, scaled 1.5x
-   to fill a 1400 x 788 Behance artboard. Title 2, the prompt and the labels are rewritten for Foxlytics (HR analytics, payroll, projects). */
+   on a 1400px-wide Behance artboard, with 600px between the title and the box and 400px
+   between the box and the labels (the artboard grows tall enough to hold them). Title 2, the prompt and the labels are rewritten for Foxlytics (HR analytics, payroll, projects). */
 html, body { margin: 0; height: 100%; background: #f7f7f4; }
 body { display: grid; place-items: center; overflow: hidden; }
 .frame { position: relative; overflow: hidden; }
-.artboard { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; background: #f7f7f4; transform-origin: 0 0; }
-.stage { position: absolute; left: 0; top: 0; width: 933.33px; height: 525.33px; transform: scale(1.5); transform-origin: 0 0; }
+.artboard { position: absolute; left: 0; top: 0; width: 1400px; height: var(--h, 788px); background: #f7f7f4; transform-origin: 0 0; }
+.stage { position: absolute; left: 0; top: var(--pad, 0px); width: 933.33px; height: auto; transform: scale(1.5); transform-origin: 0 0; }
 </style>
 <script type="importmap">
 {
@@ -37,10 +38,11 @@ import AIChatPrompt from './Codigo.js'
 
 const artboard = document.getElementById('artboard'), frame = document.getElementById('frame')
 const capture = /[?&]capture/.test(location.search)
+let H = 788
 function fit() {
-  const k = capture ? 1 : Math.min(innerWidth / 1400, innerHeight / 788)
+  const k = capture ? 1 : Math.min(innerWidth / 1400, innerHeight / H)
   artboard.style.transform = `scale(${k})`
-  frame.style.width = 1400 * k + 'px'; frame.style.height = 788 * k + 'px'
+  frame.style.width = 1400 * k + 'px'; frame.style.height = H * k + 'px'
 }
 fit(); addEventListener('resize', fit)
 
@@ -52,7 +54,7 @@ await document.fonts.load("500 36px 'Hedvig Letters Serif'")
 // letters x 40ms + 400ms + 2.5s, then fades up and out before the next one types in),
 // so the slide plays, and exports, frame for frame.
 const FONT = { fontSize: 36, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: '1.2em' }
-const TITLES = ['How Can I Help You?', 'Ask about payroll, people or projects.']
+const TITLES = ['How Can I Help You?', 'Your workforce, one question away.']
 createRoot(document.getElementById('stage')).render(createElement(AIChatPrompt, {
   ...AIChatPrompt.defaultProps,
   theme: 'light', font: FONT,
@@ -112,6 +114,16 @@ const caret = document.createElement('div')
 Object.assign(caret.style, { position: 'absolute', width: '1.5px', height: '22px', background: '#111111',
   left: (area.offsetLeft + 5) + 'px', top: (area.offsetTop + 9) + 'px' })
 area.parentElement.appendChild(caret)
+
+// Spacing on the artboard (the stage is drawn at 1.5x): 600px from the title text to the box,
+// 400px from the box to the labels. The artboard height follows the content.
+const SCALE = 1.5, PAD = 140, titleLine = 36 * 1.2
+wrap.style.marginBottom = (600 / SCALE - (wrap.offsetHeight - titleLine) / 2) + 'px'
+chips[0].parentElement.style.marginTop = (400 / SCALE) + 'px'
+const stageEl = document.getElementById('stage')
+H = Math.round(stageEl.offsetHeight * SCALE + 2 * PAD)
+artboard.style.setProperty('--h', H + 'px'); artboard.style.setProperty('--pad', PAD + 'px')
+fit()
 const titleEls = TITLES.map((text) => {
   const h = document.createElement('h1')
   Object.assign(h.style, { margin: 0, textAlign: 'center', color: '#000000', fontFamily: "'Hedvig Letters Serif', serif",
@@ -146,7 +158,7 @@ function render(time) {
 render(0)
 
 if (capture) {
-  window.__TOTAL = TOTAL; window.__render = render
+  window.__TOTAL = TOTAL; window.__render = render; window.__H = H
   setTimeout(() => { window.__ready = true }, 1200)   // let the component's own fade-in finish
 } else {
   let t0 = 0
