@@ -22,6 +22,10 @@ body { display: grid; place-items: center; overflow: hidden; }
    added light glows through brighter blue to a pale electric halo, so the sparkle survives on a
    light page. A 636px square (ring radius 280px) centred on the gap between headline and box. */
 .flower canvas:first-child { filter: url(#spark); }   /* the lines; the labels' canvas stays crisp */
+/* Photo versions (?bg=92|93|94|95): the photo fills the artboard and the flower's light is added onto
+   it exactly as the component adds it onto its blue, so every thread sparkles and the centre burns white. */
+.photo .artboard { background-size: cover; background-position: center; }
+.photo .flower canvas:first-child { filter: none; mix-blend-mode: plus-lighter; }
 .flower { position: absolute;
   width: 636px; height: 636px; left: 382px; top: 76px; }
 </style>
@@ -77,6 +81,8 @@ import FilamentFlower from './Filamentflower.js'
 
 const artboard = document.getElementById('artboard'), frame = document.getElementById('frame')
 const capture = /[?&]capture/.test(location.search)
+const BG = new URLSearchParams(location.search).get('bg')   // 92 | 93 | 94 | 95, or none for the light page
+if (BG) { document.body.classList.add('photo'); artboard.style.backgroundImage = `url(backgrounds/bg-${BG}.jpg)` }
 window.__flowerLabelCanvas = true   // the flower draws its labels on a separate, unfiltered canvas
 if (capture) {
   // the flower draws on request, and its random layout and labels repeat run to run
@@ -114,8 +120,12 @@ createRoot(document.getElementById('stage')).render(createElement(AIChatPrompt, 
 // that light into blue on the page. Labels are drawn crisp in the component blue.
 createRoot(document.getElementById('flower')).render(createElement(FilamentFlower, {
   ...FilamentFlower.defaultProps,
-  background: '#000000', lineColor: '#ffffff', labelColor: 'rgb(26, 70, 196)',
-  nodes: 240, petals: 12, lineOpacity: 0.16, ringDots: false,   // ring of dots off; labels keep their places
+  ...(BG
+    // on a photo: the demo's own look, white light on a transparent ground, labels white
+    // (line opacity a little above the demo's 0.16, as these photos are lighter than its blue)
+    ? { background: 'rgba(0, 0, 0, 0)', lineColor: '#ffffff', labelColor: '#ffffff', lineOpacity: 0.24 }
+    : { background: '#000000', lineColor: '#ffffff', labelColor: 'rgb(26, 70, 196)', lineOpacity: 0.16 }),
+  nodes: 240, petals: 12, ringDots: false,   // ring of dots off; labels keep their places
   labels: ['BRANDING', 'IDENTITY', 'WEB DESIGN', 'ART DIRECTION', 'VISUAL SYSTEMS', 'UX DESIGN', 'STRATEGY', 'FRAMER'],
 }))
 
@@ -165,7 +175,7 @@ chips.forEach((b, i) => {
 const POP = "'Inter', sans-serif"
 const box = document.querySelector('#stage textarea').parentElement
 // frosted glass (a blur layer), so the flower shows softly through the box; the labels match below
-const GLASS = { backgroundColor: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(18px) saturate(150%)',
+const GLASS = { backgroundColor: BG ? 'rgba(255, 255, 255, 0.62)' : 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(18px) saturate(150%)',
   WebkitBackdropFilter: 'blur(18px) saturate(150%)', border: '1px solid rgba(255, 255, 255, 0.7)' }
 Object.assign(box.style, { borderRadius: '26px', padding: '24px 22px 18px 40px', gap: '0px', ...GLASS })
 const stroke = (d, size = 18) => `<svg width="${size}" height="${size}" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`
@@ -194,6 +204,7 @@ chips.forEach((b) => { Object.assign(b.style, { fontFamily: POP, fontSize: '12px
 const titleEls = TITLES.map((text) => {
   const h = document.createElement('h1')
   Object.assign(h.style, { margin: 0, textAlign: 'center', color: '#000000', fontFamily: "'Inter', sans-serif",
+    ...(BG ? { color: '#ffffff', textShadow: '0 2px 24px rgba(0, 20, 80, 0.35)' } : {}),
     fontSize: '36px', fontWeight: 500, letterSpacing: '-0.02em', lineHeight: '1.2em', whiteSpace: 'nowrap',
     position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' })
   const spans = text.split('').map((ch) => {
