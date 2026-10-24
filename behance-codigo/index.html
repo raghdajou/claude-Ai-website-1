@@ -25,7 +25,12 @@ body { display: grid; place-items: center; overflow: hidden; }
 /* Photo versions (?bg=92|93|94|95): the photo fills the artboard and the flower's light is added onto
    it exactly as the component adds it onto its blue, so every thread sparkles and the centre burns white. */
 .photo .artboard { background-size: cover; background-position: center; }
-.photo .flower canvas:first-child { filter: none; mix-blend-mode: plus-lighter; }
+.flower > div { overflow: visible !important; }   /* labels may sit past the flower's square */
+.photo .flower canvas:first-child { mix-blend-mode: plus-lighter;
+  /* a soft cool halo around every thread, so the light glitters as it adds onto the photo */
+  filter: drop-shadow(0 0 2px rgba(190, 220, 255, 0.7)) brightness(1.15); }
+/* a little larger on the photos (ring radius 330px), same centre */
+.photo .flower { width: 750px; height: 750px; left: 325px; top: 19px; }
 .flower { position: absolute;
   width: 636px; height: 636px; left: 382px; top: 76px; }
 </style>
@@ -123,7 +128,7 @@ createRoot(document.getElementById('flower')).render(createElement(FilamentFlowe
   ...(BG
     // on a photo: the demo's own look, white light on a transparent ground, labels white
     // (line opacity a little above the demo's 0.16, as these photos are lighter than its blue)
-    ? { background: 'rgba(0, 0, 0, 0)', lineColor: '#ffffff', labelColor: '#ffffff', lineOpacity: 0.24 }
+    ? { background: 'rgba(0, 0, 0, 0)', lineColor: '#ffffff', labelColor: '#ffffff', lineOpacity: 0.32 }
     : { background: '#000000', lineColor: '#ffffff', labelColor: 'rgb(26, 70, 196)', lineOpacity: 0.16 }),
   nodes: 240, petals: 12, ringDots: false,   // ring of dots off; labels keep their places
   labels: ['BRANDING', 'IDENTITY', 'WEB DESIGN', 'ART DIRECTION', 'VISUAL SYSTEMS', 'UX DESIGN', 'STRATEGY', 'FRAMER'],
@@ -199,7 +204,15 @@ box.innerHTML = `
 const caret = box.querySelector('#caret')
 // the labels under the box use the same typeface
 chips.forEach((b) => { Object.assign(b.style, { fontFamily: POP, fontSize: '12px', padding: '8px 13px', gap: '6px', ...GLASS,
-  boxShadow: '0 4px 14px -8px rgba(0, 0, 0, 0.12)' }) })
+  boxShadow: '0 4px 14px -8px rgba(0, 0, 0, 0.12)' })
+  // on the photos the tags are darker glass with white text and icons
+  if (BG) {
+    Object.assign(b.style, { backgroundColor: 'rgba(255, 255, 255, 0.16)', border: '1px solid rgba(255, 255, 255, 0.35)',
+      color: '#ffffff', fontWeight: 500, textShadow: '0 1px 8px rgba(0, 20, 80, 0.35)' })
+    b.querySelectorAll('span').forEach((s) => { s.style.color = '#ffffff' })
+    b.querySelectorAll('svg').forEach((s) => { s.style.color = '#ffffff'; s.setAttribute('fill', s.getAttribute('fill') === 'none' ? 'none' : '#ffffff') })
+  }
+})
 
 const titleEls = TITLES.map((text) => {
   const h = document.createElement('h1')
