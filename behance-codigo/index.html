@@ -6,16 +6,16 @@
 <title>AI Chat Prompt Slide</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* The Framer "Codigo" component (AIChatPrompt, Claude style) in its light theme, scaled 1.5x
-   to fill a 1400 x 788 Behance artboard. The prompt box is restyled after the Foxlytics design
-   (Poppins, bold "Ask Foxlytics" prompt, "powered by" line, black send button). Title 2, the prompt and the labels are rewritten for Foxlytics (HR analytics, payroll, projects). */
+/* The Framer "Codigo" component (AIChatPrompt, Claude style) in its light theme, at its own size
+   (as in its Framer preview) on a 1400 x 788 Behance artboard, in Inter. The prompt box is restyled
+   after the Foxlytics design ( bold "Ask Foxlytics" prompt, "powered by" line, black send button). Title 2, the prompt and the labels are rewritten for Foxlytics (HR analytics, payroll, projects). */
 html, body { margin: 0; height: 100%; background: #f7f7f4; }
 body { display: grid; place-items: center; overflow: hidden; }
 .frame { position: relative; overflow: hidden; }
 .artboard { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; background: #f7f7f4; transform-origin: 0 0; }
-.stage { position: absolute; left: 0; top: 0; width: 933.33px; height: 525.33px; transform: scale(1.5); transform-origin: 0 0; }
+.stage { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; }
 </style>
 <script type="importmap">
 {
@@ -46,7 +46,7 @@ function fit() {
 }
 fit(); addEventListener('resize', fit)
 
-await Promise.all(["500 36px 'Hedvig Letters Serif'", "400 13px Poppins", "500 13px Poppins", "600 21px Poppins"].map((f) => document.fonts.load(f)))
+await Promise.all(["400 13px Inter", "500 36px Inter", "600 21px Inter"].map((f) => document.fonts.load(f)))
 
 // The component itself draws the input box and the label row (Claude style, light theme).
 // Its two titles are drawn here on a timeline that follows the component's own logic
@@ -105,7 +105,7 @@ chips.forEach((b, i) => {
 // The prompt box, rebuilt in the Foxlytics style inside the component's own box (which keeps
 // its white fill, border and shadow): bold prompt with a blinking cursor, a "powered by" line,
 // then + and model icons on the left, model picker, mic and a black send button on the right.
-const POP = "'Poppins', sans-serif"
+const POP = "'Inter', sans-serif"
 const box = document.querySelector('#stage textarea').parentElement
 Object.assign(box.style, { borderRadius: '26px', padding: '24px 22px 18px 40px', gap: '0px' })
 const stroke = (d, size = 18) => `<svg width="${size}" height="${size}" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`
@@ -132,7 +132,7 @@ chips.forEach((b) => { Object.assign(b.style, { fontFamily: POP, fontSize: '12px
 
 const titleEls = TITLES.map((text) => {
   const h = document.createElement('h1')
-  Object.assign(h.style, { margin: 0, textAlign: 'center', color: '#000000', fontFamily: "'Hedvig Letters Serif', serif",
+  Object.assign(h.style, { margin: 0, textAlign: 'center', color: '#000000', fontFamily: "'Inter', sans-serif",
     fontSize: '36px', fontWeight: 500, letterSpacing: '-0.02em', lineHeight: '1.2em', whiteSpace: 'nowrap',
     position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' })
   const spans = text.split('').map((ch) => {
