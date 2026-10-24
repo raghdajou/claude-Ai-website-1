@@ -184,21 +184,29 @@ const GLASS = { backgroundColor: BG ? 'rgba(255, 255, 255, 0.62)' : 'rgba(255, 2
   WebkitBackdropFilter: 'blur(18px) saturate(150%)', border: '1px solid rgba(255, 255, 255, 0.7)' }
 Object.assign(box.style, { borderRadius: '26px', padding: '24px 22px 18px 40px', gap: '0px', ...GLASS })
 const stroke = (d, size = 18) => `<svg width="${size}" height="${size}" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`
+// text colours: dark on the light page; on the photos the box is darker glass and everything in it is white
+const INK = BG
+  ? { main: '#ffffff', caret: '#ffffff', dots: 'rgba(255,255,255,0.75)', sub: 'rgba(255,255,255,0.88)', icons: '#ffffff',
+      model: '#ffffff', high: '#ffffff', sendBg: '#ffffff', sendFg: '#0a0a0a' }
+  : { main: '#3f3f46', caret: '#3f3f46', dots: '#a1a1aa', sub: '#8b8b93', icons: '#27272a',
+      model: '#52525b', high: '#a1a1aa', sendBg: '#0a0a0a', sendFg: '#ffffff' }
+if (BG) Object.assign(box.style, { backgroundColor: 'rgba(255, 255, 255, 0.16)', border: '1px solid rgba(255, 255, 255, 0.35)',
+  textShadow: '0 1px 10px rgba(0, 20, 80, 0.3)' })
 box.innerHTML = `
-  <div style="display:flex;align-items:center;gap:8px;font-family:${POP};font-weight:600;font-size:21px;line-height:1.2;color:#3f3f46;letter-spacing:-0.01em">
-    <span>Ask Foxlytics</span><span id="caret" style="display:inline-block;width:2px;height:22px;background:#3f3f46;margin-left:4px"></span><span style="color:#a1a1aa;font-weight:500;margin-left:-4px">...</span>
+  <div style="display:flex;align-items:center;gap:8px;font-family:${POP};font-weight:600;font-size:21px;line-height:1.2;color:${INK.main};letter-spacing:-0.01em">
+    <span>Ask Foxlytics</span><span id="caret" style="display:inline-block;width:2px;height:22px;background:${INK.caret};margin-left:4px"></span><span style="color:${INK.dots};font-weight:500;margin-left:-4px">...</span>
   </div>
-  <div style="margin-top:8px;font-family:${POP};font-size:12.5px;color:#8b8b93">powered by leading AI models</div>
+  <div style="margin-top:8px;font-family:${POP};font-size:12.5px;color:${INK.sub}">powered by leading AI models</div>
   <div style="margin-top:16px;display:flex;align-items:center;justify-content:space-between">
-    <div style="display:flex;align-items:center;gap:18px;color:#27272a">
+    <div style="display:flex;align-items:center;gap:18px;color:${INK.icons}">
       ${stroke('<path d="M40 128H216"/><path d="M128 40V216"/>')}
       ${stroke('<path d="M128 24L224 76V180L128 232L32 180V76Z"/><path d="M32 76L128 128L224 76"/><path d="M128 128V232"/>')}
     </div>
     <div style="display:flex;align-items:center;gap:16px;font-family:${POP};font-size:13px">
-      <span style="color:#52525b;font-weight:500">Sunnet 5.3</span>
-      <span style="color:#a1a1aa;display:flex;align-items:center;gap:4px">High ${stroke('<path d="M208 96L128 176L48 96"/>', 11)}</span>
-      <span style="color:#27272a;display:flex">${stroke('<rect x="88" y="24" width="80" height="136" rx="40"/><path d="M200 128a72 72 0 0 1-144 0"/><path d="M128 200V232"/>', 20)}</span>
-      <span style="width:36px;height:36px;border-radius:9px;background:#0a0a0a;color:#ffffff;display:flex;align-items:center;justify-content:center">${stroke('<path d="M128 216V48"/><path d="M56 120L128 48L200 120"/>', 20)}</span>
+      <span style="color:${INK.model};font-weight:500">Sunnet 5.3</span>
+      <span style="color:${INK.high};display:flex;align-items:center;gap:4px">High ${stroke('<path d="M208 96L128 176L48 96"/>', 11)}</span>
+      <span style="color:${INK.icons};display:flex">${stroke('<rect x="88" y="24" width="80" height="136" rx="40"/><path d="M200 128a72 72 0 0 1-144 0"/><path d="M128 200V232"/>', 20)}</span>
+      <span style="width:36px;height:36px;border-radius:9px;background:${INK.sendBg};color:${INK.sendFg};display:flex;align-items:center;justify-content:center">${stroke('<path d="M128 216V48"/><path d="M56 120L128 48L200 120"/>', 20)}</span>
     </div>
   </div>`
 const caret = box.querySelector('#caret')
