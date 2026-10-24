@@ -21,7 +21,8 @@ body { display: grid; place-items: center; overflow: hidden; }
    faint threads become the component's blue, and where threads cross or a wave crest passes, the
    added light glows through brighter blue to a pale electric halo, so the sparkle survives on a
    light page. A 636px square (ring radius 280px) centred on the gap between headline and box. */
-.flower { position: absolute; filter: url(#spark);
+.flower canvas:first-child { filter: url(#spark); }   /* the lines; the labels' canvas stays crisp */
+.flower { position: absolute;
   width: 636px; height: 636px; left: 382px; top: 76px; }
 </style>
 <script type="importmap">
@@ -43,22 +44,28 @@ body { display: grid; place-items: center; overflow: hidden; }
     <feGaussianBlur in="SourceGraphic" stdDeviation="0.6" result="S"/>
     <!-- brightness of the component's drawing -->
     <feColorMatrix in="S" type="matrix" values="0.333 0.333 0.333 0 0  0.333 0.333 0.333 0 0  0.333 0.333 0.333 0 0  0 0 0 0 1" result="L"/>
-    <!-- colour ramp: blue for faint threads, brighter towards the dense crossings -->
+    <!-- colour ramp: every thread is a vivid blue, brightening to electric and pale blue where
+         the light adds up (wave crests, crossings, the centre) -->
     <feComponentTransfer in="L" result="C">
-      <feFuncR type="table" tableValues="0.10 0.10 0.10 0.12 0.18 0.32 0.55 0.80 0.95"/>
-      <feFuncG type="table" tableValues="0.27 0.27 0.28 0.33 0.42 0.57 0.74 0.89 0.97"/>
-      <feFuncB type="table" tableValues="0.77 0.77 0.78 0.84 0.93 1 1 1 1"/>
+      <feFuncR type="table" tableValues="0.06 0.14 0.24 0.38 0.52 0.66 0.80 0.90 0.97"/>
+      <feFuncG type="table" tableValues="0.20 0.38 0.52 0.64 0.74 0.83 0.90 0.95 0.98"/>
+      <feFuncB type="table" tableValues="0.62 0.95 1 1 1 1 1 1 1"/>
     </feComponentTransfer>
-    <!-- coverage: brightness lifted so single threads read clearly -->
+    <!-- coverage: brightness lifted so every thread reads clearly; troughs of the waves stay faint -->
     <feColorMatrix in="L" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0" result="A0"/>
-    <feComponentTransfer in="A0" result="A"><feFuncA type="table" tableValues="0 0.62 0.86 0.96 1"/></feComponentTransfer>
+    <feComponentTransfer in="A0" result="A"><feFuncA type="table" tableValues="0 0.72 0.92 1 1"/></feComponentTransfer>
     <feComposite in="C" in2="A" operator="in" result="lines"/>
-    <!-- glow: only the brightest light, blurred into an electric-blue halo -->
+    <!-- sparkle: every thread carries a soft electric-blue halo that swells with its light -->
+    <feComponentTransfer in="A0" result="lo"><feFuncA type="table" tableValues="0 0.45 0.75 0.95 1"/></feComponentTransfer>
+    <feGaussianBlur in="lo" stdDeviation="2.2" result="lob"/>
+    <feFlood flood-color="#2f6bff" flood-opacity="0.55"/>
+    <feComposite in2="lob" operator="in" result="halo"/>
+    <!-- and the brightest light (centre, dense crossings) blooms wider -->
     <feComponentTransfer in="A0" result="hi"><feFuncA type="table" tableValues="0 0 0 0.05 0.35 0.75 1"/></feComponentTransfer>
-    <feGaussianBlur in="hi" stdDeviation="5" result="hib"/>
+    <feGaussianBlur in="hi" stdDeviation="6" result="hib"/>
     <feFlood flood-color="#3d74ff" flood-opacity="0.85"/>
     <feComposite in2="hib" operator="in" result="glow"/>
-    <feMerge><feMergeNode in="glow"/><feMergeNode in="lines"/></feMerge>
+    <feMerge><feMergeNode in="glow"/><feMergeNode in="halo"/><feMergeNode in="lines"/></feMerge>
   </filter>
 </svg>
 <div class="frame" id="frame"><div class="artboard" id="artboard"><div class="flower" id="flower"></div><div class="stage" id="stage"></div></div></div>
@@ -70,6 +77,7 @@ import FilamentFlower from './Filamentflower.js'
 
 const artboard = document.getElementById('artboard'), frame = document.getElementById('frame')
 const capture = /[?&]capture/.test(location.search)
+window.__flowerLabelCanvas = true   // the flower draws its labels on a separate, unfiltered canvas
 if (capture) {
   // the flower draws on request, and its random layout and labels repeat run to run
   window.__flowerManual = true
@@ -102,11 +110,11 @@ createRoot(document.getElementById('stage')).render(createElement(AIChatPrompt, 
 
 // The Filament Flower as the background, with the settings of its own demo (filament-flower.framer.website):
 // 240 filaments, 12 petals, the demo's labels and motion (spin 0.014, curve drift 0.4, waves 2.2 / 3).
-// Drawn in the demo's own colours (white lines and labels, at its 0.16 line opacity) on black;
-// the #spark filter turns that light into blue on the page.
+// Drawn in the demo's own white lines (at its 0.16 line opacity) on black; the #spark filter turns
+// that light into blue on the page. Labels are drawn crisp in the component blue.
 createRoot(document.getElementById('flower')).render(createElement(FilamentFlower, {
   ...FilamentFlower.defaultProps,
-  background: '#000000', lineColor: '#ffffff', labelColor: '#ffffff',
+  background: '#000000', lineColor: '#ffffff', labelColor: 'rgb(26, 70, 196)',
   nodes: 240, petals: 12, lineOpacity: 0.16, ringDots: false,   // ring of dots off; labels keep their places
   labels: ['BRANDING', 'IDENTITY', 'WEB DESIGN', 'ART DIRECTION', 'VISUAL SYSTEMS', 'UX DESIGN', 'STRATEGY', 'FRAMER'],
 }))
