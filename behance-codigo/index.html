@@ -18,7 +18,9 @@ body { display: grid; place-items: center; overflow: hidden; }
 .stage { position: absolute; left: 0; top: 0; width: 1400px; height: 788px; }
 /* Filament Flower behind everything: drawn white-on-black by the component, then inverted and
    multiplied into the page, so its blue background is gone and the filaments read as fine dark lines. */
-.flower { position: absolute; inset: 0; filter: invert(1); mix-blend-mode: multiply; }
+.flower { position: absolute; filter: invert(1); mix-blend-mode: multiply;
+  /* sized so the flower's ring (0.88 of the box) spans the full 1400px width of the artboard */
+  width: 1591px; height: 1591px; left: -95.5px; top: -401.5px; }
 </style>
 <script type="importmap">
 {
@@ -71,12 +73,14 @@ createRoot(document.getElementById('stage')).render(createElement(AIChatPrompt, 
   placeholderText: 'Ask Foxlytics...',
 }))
 
-// The Filament Flower as the background, with its own motion and defaults; only the colours change
-// (black ground and light labels, which the invert above turns into the page and dark grey) and the
-// line opacity, raised so the filaments still read once they are dark lines on a light page.
+// The Filament Flower as the background, with its own motion and defaults. Colours are given as the
+// inverse of what shows, because the layer is inverted: a black ground becomes the page, and
+// #E5B93B lines / #856A1F labels become the component's own blue #1A46C4 and a lighter #7A95E0.
+// Overlapping lines still add up as in the component, so the core reads as a deeper blue.
+// Line opacity is raised so the filaments still read on a light page.
 createRoot(document.getElementById('flower')).render(createElement(FilamentFlower, {
   ...FilamentFlower.defaultProps,
-  background: '#000000', labelColor: '#b4b4b4', lineOpacity: 0.34,
+  background: '#000000', lineColor: '#E5B93B', labelColor: '#856A1F', lineOpacity: 0.34,
 }))
 
 const EXIT = 0.35
