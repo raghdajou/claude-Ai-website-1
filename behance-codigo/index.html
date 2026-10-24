@@ -85,7 +85,7 @@ createRoot(document.getElementById('stage')).render(createElement(AIChatPrompt, 
 createRoot(document.getElementById('flower')).render(createElement(FilamentFlower, {
   ...FilamentFlower.defaultProps,
   background: '#000000', lineColor: 'rgb(255, 202, 87)', labelColor: 'rgb(255, 202, 87)',
-  nodes: 240, petals: 12, lineOpacity: 0.34,
+  nodes: 240, petals: 12, lineOpacity: 0.34, ringDots: false,   // ring of dots off; labels keep their places
   labels: ['BRANDING', 'IDENTITY', 'WEB DESIGN', 'ART DIRECTION', 'VISUAL SYSTEMS', 'UX DESIGN', 'STRATEGY', 'FRAMER'],
 }))
 
@@ -134,9 +134,10 @@ chips.forEach((b, i) => {
 // then + and model icons on the left, model picker, mic and a black send button on the right.
 const POP = "'Inter', sans-serif"
 const box = document.querySelector('#stage textarea').parentElement
-// frosted glass, so the flower's glowing centre shows through the box
-Object.assign(box.style, { borderRadius: '26px', padding: '24px 22px 18px 40px', gap: '0px',
-  backgroundColor: 'rgba(255, 255, 255, 0.62)', backdropFilter: 'blur(10px) saturate(140%)', WebkitBackdropFilter: 'blur(10px) saturate(140%)' })
+// frosted glass (a blur layer), so the flower shows softly through the box; the labels match below
+const GLASS = { backgroundColor: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(18px) saturate(150%)',
+  WebkitBackdropFilter: 'blur(18px) saturate(150%)', border: '1px solid rgba(255, 255, 255, 0.7)' }
+Object.assign(box.style, { borderRadius: '26px', padding: '24px 22px 18px 40px', gap: '0px', ...GLASS })
 const stroke = (d, size = 18) => `<svg width="${size}" height="${size}" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`
 box.innerHTML = `
   <div style="display:flex;align-items:center;gap:8px;font-family:${POP};font-weight:600;font-size:21px;line-height:1.2;color:#3f3f46;letter-spacing:-0.01em">
@@ -157,7 +158,8 @@ box.innerHTML = `
   </div>`
 const caret = box.querySelector('#caret')
 // the labels under the box use the same typeface
-chips.forEach((b) => { Object.assign(b.style, { fontFamily: POP, fontSize: '12px', padding: '8px 13px', gap: '6px' }) })
+chips.forEach((b) => { Object.assign(b.style, { fontFamily: POP, fontSize: '12px', padding: '8px 13px', gap: '6px', ...GLASS,
+  boxShadow: '0 4px 14px -8px rgba(0, 0, 0, 0.12)' }) })
 
 const titleEls = TITLES.map((text) => {
   const h = document.createElement('h1')
