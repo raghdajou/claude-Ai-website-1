@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 static inline float clampf(float v) { return v < 0 ? 0 : (v > 255 ? 255 : v); }
-void fs_dither(const float *img, const uint8_t *mask, int h, int w, const float *pal, int k, float strength, uint8_t *out) {
+// dm: 1 where error diffusion is wanted (the photo), 0 for crisp graphics (text, UI, flat white)
+void fs_dither(const float *img, const uint8_t *mask, const uint8_t *dm, int h, int w, const float *pal, int k, float strength, uint8_t *out) {
     float *e0 = calloc((w + 2) * 3, sizeof(float)), *e1 = calloc((w + 2) * 3, sizeof(float));
     for (int y = 0; y < h; y++) {
         int dir = (y & 1) ? -1 : 1, x0 = dir > 0 ? 0 : w - 1;
@@ -13,7 +14,7 @@ void fs_dither(const float *img, const uint8_t *mask, int h, int w, const float 
             int p = y * w + x;
             if (!mask[p]) continue;
             float c[3];
-            for (int ch = 0; ch < 3; ch++) c[ch] = clampf(img[p * 3 + ch] + e0[(x + 1) * 3 + ch]);
+            for (int ch = 0; ch < 3; ch++) c[ch] = clampf(img[p * 3 + ch] + (dm[p] ? e0[(x + 1) * 3 + ch] : 0));
             int best = 0; float bd = 1e30f;
             for (int j = 0; j < k; j++) {
                 float dr = c[0] - pal[j * 3], dg = c[1] - pal[j * 3 + 1], db = c[2] - pal[j * 3 + 2];
@@ -21,6 +22,7 @@ void fs_dither(const float *img, const uint8_t *mask, int h, int w, const float 
                 if (d < bd) { bd = d; best = j; }
             }
             out[p] = best;
+            if (!dm[p]) continue;
             for (int ch = 0; ch < 3; ch++) {
                 float er = (c[ch] - pal[best * 3 + ch]) * strength;
                 int xn = x + dir;

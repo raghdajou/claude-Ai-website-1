@@ -30,3 +30,5 @@ The GIF is written by `src/gifenc/hqgif.py` (with the C helpers in `gq.c`, built
 `gcc -O3 -shared -fPIC gq.c -o libgq.so`): every frame has its own palette fitted only to the pixels
 that change, the still slide is repainted once in 16 tiles with a palette each, and nothing that
 does not move is ever re-dithered — so far more than 256 colours, no speckles and no shimmer.
+Dithering is limited to the photo (`src/gifenc/dithermask.png`, passed as the encoder's 6th argument);
+the headline, the cards, the chart and all text are quantized without dither, so they stay crisp.

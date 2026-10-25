@@ -9,7 +9,7 @@ from PIL import Image
 from scipy.cluster.vq import kmeans2, vq
 lib = ctypes.CDLL(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'libgq.so'))
 P = np.ctypeslib.ndpointer
-lib.fs_dither.argtypes = [P(np.float32), P(np.uint8), ctypes.c_int, ctypes.c_int, P(np.float32), ctypes.c_int, ctypes.c_float, P(np.uint8)]
+lib.fs_dither.argtypes = [P(np.float32), P(np.uint8), P(np.uint8), ctypes.c_int, ctypes.c_int, P(np.float32), ctypes.c_int, ctypes.c_float, P(np.uint8)]
 lib.lzw.argtypes = [P(np.uint8), ctypes.c_int, ctypes.c_int, P(np.uint8)]; lib.lzw.restype = ctypes.c_int
 STRENGTH = 0.85   # a touch under full error diffusion: smooth gradients, no salt-and-pepper grain
 
@@ -27,9 +27,9 @@ def palette(px, k):
     c, _ = kmeans2(px.astype(np.float32) * w, init * w, iter=6, minit='matrix', missing='warn')
     return np.clip(c / w, 0, 255).astype(np.float32)
 
-def dither(img, mask, pal):
+def dither(img, mask, pal, dm):
     out = np.zeros(mask.shape, np.uint8)
-    lib.fs_dither(np.ascontiguousarray(img, np.float32), np.ascontiguousarray(mask, np.uint8), mask.shape[0], mask.shape[1],
+    lib.fs_dither(np.ascontiguousarray(img, np.float32), np.ascontiguousarray(mask, np.uint8), np.ascontiguousarray(dm, np.uint8), mask.shape[0], mask.shape[1],
                   np.ascontiguousarray(pal, np.float32), len(pal), STRENGTH, out)
     return out
 
@@ -43,6 +43,8 @@ def block(idx, x, y, pal, trans, delay):
     return gce + desc + ct.tobytes() + b'\x08' + buf[:n].tobytes()
 
 src, Wd, Hd, fps, out = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), sys.argv[5]
+# optional: a greyscale image, white where dithering is wanted; everything else is quantized crisply
+DM = (np.asarray(Image.open(sys.argv[6]).convert('L').resize((Wd, Hd), Image.BOX)) > 127).astype(np.uint8) if len(sys.argv) > 6 else np.ones((Hd, Wd), np.uint8)
 dec = subprocess.Popen(['ffmpeg', '-loglevel', 'error', '-i', src, '-vf', f'scale={Wd}:{Hd}:flags=lanczos', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'],
                        stdout=subprocess.PIPE)
 n = Wd * Hd * 3; delay = round(100 / fps)
@@ -56,7 +58,7 @@ while True:
     if len(b) < n: break
     fr = np.frombuffer(b, np.uint8).reshape(Hd, Wd, 3)
     if last is None:
-        pal = palette(fr, 256); idx = dither(fr.astype(np.float32), np.ones((Hd, Wd), np.uint8), pal)
+        pal = palette(fr, 256); idx = dither(fr.astype(np.float32), np.ones((Hd, Wd), np.uint8), pal, DM)
         f.write(block(idx, 0, 0, pal, None, delay))
     else:
         ch = (np.abs(fr.astype(np.int16) - last).max(-1) > 0)
@@ -68,7 +70,7 @@ while True:
             ys, xs = np.nonzero(ch); y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
             m = ch[y0:y1, x0:x1]; reg = fr[y0:y1, x0:x1]
             pal = palette(reg[m], 255)                                       # index 255 is kept for "unchanged"
-            idx = dither(reg.astype(np.float32), m.astype(np.uint8), pal); idx[~m] = 255
+            idx = dither(reg.astype(np.float32), m.astype(np.uint8), pal, DM[y0:y1, x0:x1]); idx[~m] = 255
             f.write(block(idx, x0, y0, pal, 255, delay))
     last = fr.astype(np.int16); i += 1
     if i % 100 == 0: print('frame', i, flush=True)
