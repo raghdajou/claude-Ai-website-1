@@ -14,3 +14,14 @@ the first bubble, `animate2.py` sends the two large bubbles out to the photo car
 hit) and back home, re-rendering each as glass every frame (`glass.py`: the background through a soft lens
 plus the bubble's own highlights, rim and shadow); the small card bubble keeps a gentle bob. (`animate.py`
 is the earlier, gentler figure-eight version.)
+
+## v3 — five bubbles, always moving
+
+- `exports/grow-gently-5-bubbles-1400x992.gif` — 1400 px Behance width, 50 fps, seamless 16 s loop (19 MB)
+- `exports/grow-gently-5-bubbles-2800x1986.mp4` — 2800 px master, 50 fps
+
+All five glass bubbles (the three from Figma plus a new medium and a new small one) glide at constant
+speed and bounce softly off the photo card's edges (`src/paths.py`), never stopping; every path makes a
+whole number of round trips per loop, so frame 800 runs straight into frame 1. `src/animate3.py` renders
+the frames; `src/stablegif.py` encodes the GIF with one palette and a fixed dither for everything that
+does not move, so the static slide never shimmers.
