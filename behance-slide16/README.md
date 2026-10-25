@@ -17,7 +17,7 @@ is the earlier, gentler figure-eight version.)
 
 ## v3 — five bubbles, always moving
 
-- `exports/grow-gently-5-bubbles-1400x992.gif` — 1400 px Behance width, 50 fps, seamless 16 s loop (19 MB)
+- `exports/grow-gently-5-bubbles-1400x992.gif` — 1400 px Behance width, 50 fps, seamless 16 s loop (25 MB)
 - `exports/grow-gently-5-bubbles-2800x1986.mp4` — 2800 px master, 50 fps
 
 All five glass bubbles (the three from Figma plus a new medium and a new small one) glide at constant
@@ -25,3 +25,8 @@ speed and bounce softly off the photo card's edges (`src/paths.py`), never stopp
 whole number of round trips per loop, so frame 800 runs straight into frame 1. `src/animate3.py` renders
 the frames; `src/stablegif.py` encodes the GIF with one palette and a fixed dither for everything that
 does not move, so the static slide never shimmers.
+
+The GIF is written by `src/gifenc/hqgif.py` (with the C helpers in `gq.c`, built with
+`gcc -O3 -shared -fPIC gq.c -o libgq.so`): every frame has its own palette fitted only to the pixels
+that change, the still slide is repainted once in 16 tiles with a palette each, and nothing that
+does not move is ever re-dithered — so far more than 256 colours, no speckles and no shimmer.
