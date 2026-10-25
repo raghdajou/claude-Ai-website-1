@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 static inline float clampf(float v) { return v < 0 ? 0 : (v > 255 ? 255 : v); }
-// dm: 1 where error diffusion is wanted (the photo), 0 for crisp graphics (text, UI, flat white)
+// dm: how much error diffusion each pixel gets, 0..255 (255 = full: the photo; 0 = crisp: text, UI)
 void fs_dither(const float *img, const uint8_t *mask, const uint8_t *dm, int h, int w, const float *pal, int k, float strength, uint8_t *out) {
     float *e0 = calloc((w + 2) * 3, sizeof(float)), *e1 = calloc((w + 2) * 3, sizeof(float));
     for (int y = 0; y < h; y++) {
@@ -14,7 +14,7 @@ void fs_dither(const float *img, const uint8_t *mask, const uint8_t *dm, int h, 
             int p = y * w + x;
             if (!mask[p]) continue;
             float c[3];
-            for (int ch = 0; ch < 3; ch++) c[ch] = clampf(img[p * 3 + ch] + (dm[p] ? e0[(x + 1) * 3 + ch] : 0));
+            for (int ch = 0; ch < 3; ch++) c[ch] = clampf(img[p * 3 + ch] + e0[(x + 1) * 3 + ch] * (dm[p] / 255.0f));
             int best = 0; float bd = 1e30f;
             for (int j = 0; j < k; j++) {
                 float dr = c[0] - pal[j * 3], dg = c[1] - pal[j * 3 + 1], db = c[2] - pal[j * 3 + 2];
@@ -24,7 +24,7 @@ void fs_dither(const float *img, const uint8_t *mask, const uint8_t *dm, int h, 
             out[p] = best;
             if (!dm[p]) continue;
             for (int ch = 0; ch < 3; ch++) {
-                float er = (c[ch] - pal[best * 3 + ch]) * strength;
+                float er = (c[ch] - pal[best * 3 + ch]) * strength * (dm[p] / 255.0f);
                 int xn = x + dir;
                 if (xn >= 0 && xn < w && mask[p + dir]) e0[(xn + 1) * 3 + ch] += er * 7 / 16;
                 e1[(x - dir + 1) * 3 + ch] += er * 3 / 16;

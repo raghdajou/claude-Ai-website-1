@@ -43,8 +43,8 @@ def block(idx, x, y, pal, trans, delay):
     return gce + desc + ct.tobytes() + b'\x08' + buf[:n].tobytes()
 
 src, Wd, Hd, fps, out = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), sys.argv[5]
-# optional: a greyscale image, white where dithering is wanted; everything else is quantized crisply
-DM = (np.asarray(Image.open(sys.argv[6]).convert('L').resize((Wd, Hd), Image.BOX)) > 127).astype(np.uint8) if len(sys.argv) > 6 else np.ones((Hd, Wd), np.uint8)
+# optional: a greyscale image giving how much each pixel is dithered (white: fully, black: not at all, crisp)
+DM = np.asarray(Image.open(sys.argv[6]).convert('L').resize((Wd, Hd), Image.NEAREST)).astype(np.uint8) if len(sys.argv) > 6 else np.full((Hd, Wd), 255, np.uint8)
 dec = subprocess.Popen(['ffmpeg', '-loglevel', 'error', '-i', src, '-vf', f'scale={Wd}:{Hd}:flags=lanczos', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'],
                        stdout=subprocess.PIPE)
 n = Wd * Hd * 3; delay = round(100 / fps)

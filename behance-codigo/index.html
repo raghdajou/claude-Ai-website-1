@@ -29,6 +29,11 @@ body { display: grid; place-items: center; overflow: hidden; }
 .photo .flower canvas:first-child { mix-blend-mode: plus-lighter;
   /* a soft cool halo around every thread, so the light glitters as it adds onto the photo */
   filter: drop-shadow(0 0 2px rgba(190, 220, 255, 0.7)) brightness(1.15); }
+/* Light photos (?bg=99|100): adding white light onto an already light photo would wash the threads
+   out, so there they are drawn white over the photo, each with a thin glow in the photo's own deeper
+   tone (--glow) that outlines it, so every line stays crisp and sparkles. */
+.photo.light .flower canvas:first-child { mix-blend-mode: normal;
+  filter: drop-shadow(0 0 1px var(--glow)) drop-shadow(0 0 5px var(--glow)) brightness(1.1); }
 /* a little larger on the photos (ring radius 330px), same centre */
 .photo .flower { width: 750px; height: 750px; left: 325px; top: 19px; }
 .flower { position: absolute;
@@ -86,8 +91,15 @@ import FilamentFlower from './Filamentflower.js'
 
 const artboard = document.getElementById('artboard'), frame = document.getElementById('frame')
 const capture = /[?&]capture/.test(location.search)
-const BG = new URLSearchParams(location.search).get('bg')   // 92 | 93 | 94 | 95, or none for the light page
+const BG = new URLSearchParams(location.search).get('bg')   // 92 | 93 | 94 | 95 | 98 | 99 | 100, or none for the light page
+// light photos keep the dark text of the light page; the glow is each photo's deeper tone
+const LIGHT_BG = { 99: 'rgba(176, 72, 104, 0.6)', 100: 'rgba(118, 44, 150, 0.55)' }
+const LIGHT = BG in LIGHT_BG
 if (BG) { document.body.classList.add('photo'); artboard.style.backgroundImage = `url(backgrounds/bg-${BG}.jpg)` }
+if (LIGHT) { document.body.classList.add('light'); document.body.style.setProperty('--glow', LIGHT_BG[BG]) }
+// ?uimask: the text and icons alone on flat grey (no photo, no flower), so the GIF encoder can find them and keep them crisp
+if (/[?&]uimask/.test(location.search)) { artboard.style.backgroundImage = 'none'; artboard.style.background = '#808080'
+  document.head.insertAdjacentHTML('beforeend', '<style>.flower { display: none !important }</style>') }
 window.__flowerLabelCanvas = true   // the flower draws its labels on a separate, unfiltered canvas
 if (capture) {
   // the flower draws on request, and its random layout and labels repeat run to run
@@ -128,7 +140,7 @@ createRoot(document.getElementById('flower')).render(createElement(FilamentFlowe
   ...(BG
     // on a photo: the demo's own look, white light on a transparent ground, labels white
     // (line opacity a little above the demo's 0.16, as these photos are lighter than its blue)
-    ? { background: 'rgba(0, 0, 0, 0)', lineColor: '#ffffff', labelColor: '#ffffff', lineOpacity: 0.32 }
+    ? { background: 'rgba(0, 0, 0, 0)', lineColor: '#ffffff', labelColor: LIGHT ? LIGHT_BG[BG].replace(/[\d.]+\)$/, '0.9)') : '#ffffff', lineOpacity: LIGHT ? 0.5 : BG === '98' ? 0.55 : 0.32 }   // the black photo takes brighter light
     : { background: '#000000', lineColor: '#ffffff', labelColor: 'rgb(26, 70, 196)', lineOpacity: 0.16 }),
   nodes: 240, petals: 12, ringDots: false,   // ring of dots off; labels keep their places
   labels: ['BRANDING', 'IDENTITY', 'WEB DESIGN', 'ART DIRECTION', 'VISUAL SYSTEMS', 'UX DESIGN', 'STRATEGY', 'FRAMER'],
@@ -185,12 +197,12 @@ const GLASS = { backgroundColor: BG ? 'rgba(255, 255, 255, 0.62)' : 'rgba(255, 2
 Object.assign(box.style, { borderRadius: '26px', padding: '24px 22px 18px 40px', gap: '0px', ...GLASS })
 const stroke = (d, size = 18) => `<svg width="${size}" height="${size}" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`
 // text colours: dark on the light page; on the photos the box is darker glass and everything in it is white
-const INK = BG
+const INK = BG && !LIGHT
   ? { main: '#ffffff', caret: '#ffffff', dots: 'rgba(255,255,255,0.75)', sub: 'rgba(255,255,255,0.88)', icons: '#ffffff',
       model: '#ffffff', high: '#ffffff', sendBg: '#ffffff', sendFg: '#0a0a0a' }
   : { main: '#3f3f46', caret: '#3f3f46', dots: '#a1a1aa', sub: '#8b8b93', icons: '#27272a',
       model: '#52525b', high: '#a1a1aa', sendBg: '#0a0a0a', sendFg: '#ffffff' }
-if (BG) Object.assign(box.style, { backgroundColor: 'rgba(255, 255, 255, 0.16)', border: '1px solid rgba(255, 255, 255, 0.35)',
+if (BG && !LIGHT) Object.assign(box.style, { backgroundColor: 'rgba(255, 255, 255, 0.16)', border: '1px solid rgba(255, 255, 255, 0.35)',
   textShadow: '0 1px 10px rgba(0, 20, 80, 0.3)' })
 box.innerHTML = `
   <div style="display:flex;align-items:center;gap:8px;font-family:${POP};font-weight:600;font-size:21px;line-height:1.2;color:${INK.main};letter-spacing:-0.01em">
@@ -214,7 +226,7 @@ const caret = box.querySelector('#caret')
 chips.forEach((b) => { Object.assign(b.style, { fontFamily: POP, fontSize: '12px', padding: '8px 13px', gap: '6px', ...GLASS,
   boxShadow: '0 4px 14px -8px rgba(0, 0, 0, 0.12)' })
   // on the photos the tags are darker glass with white text and icons
-  if (BG) {
+  if (BG && !LIGHT) {
     Object.assign(b.style, { backgroundColor: 'rgba(255, 255, 255, 0.16)', border: '1px solid rgba(255, 255, 255, 0.35)',
       color: '#ffffff', fontWeight: 500, textShadow: '0 1px 8px rgba(0, 20, 80, 0.35)' })
     b.querySelectorAll('span').forEach((s) => { s.style.color = '#ffffff' })
@@ -225,7 +237,7 @@ chips.forEach((b) => { Object.assign(b.style, { fontFamily: POP, fontSize: '12px
 const titleEls = TITLES.map((text) => {
   const h = document.createElement('h1')
   Object.assign(h.style, { margin: 0, textAlign: 'center', color: '#000000', fontFamily: "'Inter', sans-serif",
-    ...(BG ? { color: '#ffffff', textShadow: '0 2px 24px rgba(0, 20, 80, 0.35)' } : {}),
+    ...(BG && !LIGHT ? { color: '#ffffff', textShadow: '0 2px 24px rgba(0, 20, 80, 0.35)' } : {}),
     fontSize: '36px', fontWeight: 500, letterSpacing: '-0.02em', lineHeight: '1.2em', whiteSpace: 'nowrap',
     position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' })
   const spans = text.split('').map((ch) => {
