@@ -1,9 +1,9 @@
 # High-quality GIF encoder. Frame 1 is the whole slide, dithered once with a palette fitted to it.
 # After that each frame carries only the pixels whose source colour changed, with its own palette
 # fitted to just those pixels (the bubbles), so the moving glass gets a full 255 colours and the
-# still slide is never re-dithered: no shimmer, no stray dots. Frames 1-16 also each repaint one
-# tile of the slide (a 4 x 4 grid) with a palette of its own, so the still slide itself ends up
-# with far more than 256 colours.
+# still slide is never re-dithered: no shimmer, no stray dots. Whenever part of the picture comes
+# to rest, quiet frames repaint it one tile at a time (a 4 x 4 grid by default, GIF_TILES to change) with a palette of its own,
+# so everything that holds still ends up with far more than 256 colours.
 import numpy as np, subprocess, sys, ctypes, struct, os
 from PIL import Image
 from scipy.cluster.vq import kmeans2, vq
@@ -51,7 +51,9 @@ n = Wd * Hd * 3; delay = round(100 / fps)
 f = open(out, 'wb')
 f.write(b'GIF89a' + struct.pack('<HH', Wd, Hd) + bytes([0x70, 0, 0]))        # no global table: every frame brings its own
 f.write(b'\x21\xff\x0bNETSCAPE2.0\x03\x01\x00\x00\x00')                    # loop forever
-TY = TX = 4; tiles = [(ty * Hd // TY, (ty + 1) * Hd // TY, tx * Wd // TX, (tx + 1) * Wd // TX) for ty in range(TY) for tx in range(TX)]
+TY = TX = int(os.environ.get("GIF_TILES", 4)); tiles = [(ty * Hd // TY, (ty + 1) * Hd // TY, tx * Wd // TX, (tx + 1) * Wd // TX) for ty in range(TY) for tx in range(TX)]
+QUIET = 0.03                  # a frame may refine a tile when under 3% of its pixels are moving
+pending = np.ones((Hd, Wd), bool); still = np.zeros((Hd, Wd), np.int32)   # painted but not yet refined; frames unchanged
 last = None; i = 0
 while True:
     b = dec.stdout.read(n)
@@ -62,8 +64,15 @@ while True:
         f.write(block(idx, 0, 0, pal, None, delay))
     else:
         ch = (np.abs(fr.astype(np.int16) - last).max(-1) > 0)
-        if i <= len(tiles):
-            ty0, ty1, tx0, tx1 = tiles[i - 1]; ch[ty0:ty1, tx0:tx1] = True
+        pending |= ch; still = np.where(ch, 0, still + 1)
+        if ch.mean() < QUIET:
+            ready = pending & (still >= 2)                      # settled for two frames
+            counts = [ready[a:b, c:d].sum() for (a, b, c, d) in tiles]
+            k = int(np.argmax(counts))
+            if counts[k] > 0:
+                ty0, ty1, tx0, tx1 = tiles[k]
+                sub = np.zeros_like(ch); sub[ty0:ty1, tx0:tx1] = ready[ty0:ty1, tx0:tx1]
+                ch |= sub; pending &= ~sub
         if not ch.any():
             f.write(block(np.zeros((1, 1), np.uint8), 0, 0, np.zeros((1, 3), np.float32), 0, delay))
         else:
