@@ -56,6 +56,20 @@ QUIET = 0.03                  # a frame may refine a tile when under 3% of its p
 # dither share in busy frames (GIF_MOTION_DITHER, default 1): lower it to make the GIF smaller, since
 # the motion hides banding and the refinement repaints everything with full dither once it settles
 MOTION = float(os.environ.get('GIF_MOTION_DITHER', 1))
+MOTION_COLORS = int(os.environ.get('GIF_MOTION_COLORS', 255))   # palette size for busy frames (fewer: smaller)
+# GIF_MOTION_BAYER: if set, busy frames use an ordered 8 x 8 dither of this spread (in levels) instead
+# of error diffusion: the pattern is fixed to the canvas, so it hides banding yet compresses well
+BAYER = float(os.environ.get('GIF_MOTION_BAYER', 0))
+B8 = np.array([[0, 32, 8, 40, 2, 34, 10, 42], [48, 16, 56, 24, 50, 18, 58, 26], [12, 44, 4, 36, 14, 46, 6, 38],
+               [60, 28, 52, 20, 62, 30, 54, 22], [3, 35, 11, 43, 1, 33, 9, 41], [51, 19, 59, 27, 49, 17, 57, 25],
+               [15, 47, 7, 39, 13, 45, 5, 37], [63, 31, 55, 23, 61, 29, 53, 21]], np.float32) / 64 - 0.5 + 1 / 128
+WQ = np.array([2, 4, 3], np.float32) ** 0.5
+def ordered(reg, m, pal, x0, y0):
+    h, w = m.shape
+    th = np.tile(B8, (h // 8 + 2, w // 8 + 2))[y0 % 8:y0 % 8 + h, x0 % 8:x0 % 8 + w]
+    px = np.clip(reg.astype(np.float32) + th[..., None] * BAYER, 0, 255)[m]
+    idx = np.full(m.shape, 255, np.uint8); idx[m] = vq(px * WQ, pal * WQ)[0]
+    return idx
 pending = np.ones((Hd, Wd), bool); still = np.zeros((Hd, Wd), np.int32)   # painted but not yet refined; frames unchanged
 last = None; i = 0
 while True:
@@ -82,9 +96,10 @@ while True:
         else:
             ys, xs = np.nonzero(ch); y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
             m = ch[y0:y1, x0:x1]; reg = fr[y0:y1, x0:x1]
-            pal = palette(reg[m], 255)                                       # index 255 is kept for "unchanged"
+            pal = palette(reg[m], MOTION_COLORS if busy else 255)           # index 255 is kept for "unchanged"
             dm = DM[y0:y1, x0:x1] if not busy else np.round(DM[y0:y1, x0:x1] * MOTION).astype(np.uint8)
-            idx = dither(reg.astype(np.float32), m.astype(np.uint8), pal, dm); idx[~m] = 255
+            if busy and BAYER > 0: idx = ordered(reg, m, pal, x0, y0)
+            else: idx = dither(reg.astype(np.float32), m.astype(np.uint8), pal, dm); idx[~m] = 255
             f.write(block(idx, x0, y0, pal, 255, delay))
     last = fr.astype(np.int16); i += 1
     if i % 100 == 0: print('frame', i, flush=True)
