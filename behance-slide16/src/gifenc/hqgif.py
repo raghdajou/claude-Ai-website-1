@@ -53,6 +53,9 @@ f.write(b'GIF89a' + struct.pack('<HH', Wd, Hd) + bytes([0x70, 0, 0]))        # n
 f.write(b'\x21\xff\x0bNETSCAPE2.0\x03\x01\x00\x00\x00')                    # loop forever
 TY = TX = int(os.environ.get("GIF_TILES", 4)); tiles = [(ty * Hd // TY, (ty + 1) * Hd // TY, tx * Wd // TX, (tx + 1) * Wd // TX) for ty in range(TY) for tx in range(TX)]
 QUIET = 0.03                  # a frame may refine a tile when under 3% of its pixels are moving
+# dither share in busy frames (GIF_MOTION_DITHER, default 1): lower it to make the GIF smaller, since
+# the motion hides banding and the refinement repaints everything with full dither once it settles
+MOTION = float(os.environ.get('GIF_MOTION_DITHER', 1))
 pending = np.ones((Hd, Wd), bool); still = np.zeros((Hd, Wd), np.int32)   # painted but not yet refined; frames unchanged
 last = None; i = 0
 while True:
@@ -65,7 +68,8 @@ while True:
     else:
         ch = (np.abs(fr.astype(np.int16) - last).max(-1) > 0)
         pending |= ch; still = np.where(ch, 0, still + 1)
-        if ch.mean() < QUIET:
+        busy = ch.mean() >= QUIET
+        if not busy:
             ready = pending & (still >= 2)                      # settled for two frames
             counts = [ready[a:b, c:d].sum() for (a, b, c, d) in tiles]
             k = int(np.argmax(counts))
@@ -79,7 +83,8 @@ while True:
             ys, xs = np.nonzero(ch); y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
             m = ch[y0:y1, x0:x1]; reg = fr[y0:y1, x0:x1]
             pal = palette(reg[m], 255)                                       # index 255 is kept for "unchanged"
-            idx = dither(reg.astype(np.float32), m.astype(np.uint8), pal, DM[y0:y1, x0:x1]); idx[~m] = 255
+            dm = DM[y0:y1, x0:x1] if not busy else np.round(DM[y0:y1, x0:x1] * MOTION).astype(np.uint8)
+            idx = dither(reg.astype(np.float32), m.astype(np.uint8), pal, dm); idx[~m] = 255
             f.write(block(idx, x0, y0, pal, 255, delay))
     last = fr.astype(np.int16); i += 1
     if i % 100 == 0: print('frame', i, flush=True)
