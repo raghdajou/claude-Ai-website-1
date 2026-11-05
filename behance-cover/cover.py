@@ -29,7 +29,10 @@ for _ in range(3):                                       # pull the surroundings
     fill = np.asarray(Image.fromarray(a2.clip(0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(40))).astype(np.float32)
 a[y0:y1, x0:x1] = fill[y0:y1, x0:x1]
 bg = Image.fromarray(a.clip(0, 255).astype(np.uint8))
-if SRC and '/' in SRC: bg = Image.open(SRC).convert('RGB')       # a photo already shot with motion blur
+if SRC == 'light':                                       # the light studio of the Framer preview
+    g = np.linspace(0, 1, 800)[:, None, None]
+    bg = Image.fromarray(np.broadcast_to(np.array([236, 237, 237]) * (1 - g) + np.array([246, 246, 245]) * g, (800, 1000, 3)).astype(np.uint8))
+elif SRC and '/' in SRC: bg = Image.open(SRC).convert('RGB')       # a photo already shot with motion blur
 elif SRC: bg = streak(Image.open(I + SRC).convert('RGB'))
 k = max(w / bg.width, h / bg.height)
 bg = bg.resize((round(bg.width * k), round(bg.height * k)), Image.LANCZOS)
@@ -48,6 +51,14 @@ d.rounded_rectangle((MX + 10 * SS, MY + 30 * SS, MX + MW - 10 * SS, MY + MH + 40
 d.rectangle((NX + 6 * SS, MY + MH, NX + NW + 30 * SS, h), fill=(0, 0, 0, 70))
 sh = sh.filter(ImageFilter.GaussianBlur(36 * SS)); canvas.alpha_composite(sh)
 
+# light studio only: the floor brightens to white below the monitor, as in the reference
+def floor():
+    f = np.zeros((h, w, 4), np.uint8); f[..., :3] = 252
+    yy = np.linspace(0, 1, h)[:, None]
+    f[..., 3] = (np.clip((yy - 0.74) / 0.26, 0, 1) ** 1.3 * 235).astype(np.uint8)
+    return Image.fromarray(f)
+if SRC == 'light': canvas.alpha_composite(floor())
+
 # stand column: brushed aluminium, darker just under the monitor
 st = np.zeros((h - MY - MH, NW, 4), np.float32)
 xs = np.linspace(0, 1, NW)[None, :]; ys = np.linspace(0, 1, h - MY - MH)[:, None]
@@ -55,6 +66,7 @@ tone = 206 + 22 * np.sin(np.pi * xs) - 34 * np.exp(-ys * 9) + 18 * ys
 st[..., 0] = tone; st[..., 1] = tone + 1; st[..., 2] = tone + 3; st[..., 3] = 255
 st[:, :2 * SS, :3] *= 0.86; st[:, -2 * SS:, :3] *= 0.86          # edges
 canvas.alpha_composite(Image.fromarray(st.clip(0, 255).astype(np.uint8)), (NX, MY + MH))
+if SRC == 'light': canvas.alpha_composite(floor())                  # the stand fades into the floor light
 
 # bezel
 bz = layer(); d = ImageDraw.Draw(bz)
