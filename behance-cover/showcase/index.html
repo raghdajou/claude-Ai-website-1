@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foxlytics Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* A dark product-showcase page: title block, one large image, a column of thumbnails that switch it. */
+  :root { --bg: #111111; --panel: #1a1a1a; --line: #262626; --ink: #f5f5f5; --muted: #9a9a9a; --accent: #c4e265; --accent-ink: #10140a; }
+  :root[data-theme="light"] { --bg: #f4f4f2; --panel: #ffffff; --line: #e4e4e2; --ink: #141414; --muted: #6b6b6b; }
+  html, body { margin: 0; background: var(--bg); }
+  body { color: var(--ink); font: 14px/1.5 'Inter', system-ui, sans-serif; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 56px 16px 64px; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; margin-bottom: 40px; }
+  h1 { margin: 0 0 6px; font-size: 32px; font-weight: 600; letter-spacing: -0.02em; }
+  .sub { margin: 0 0 14px; font-size: 16px; font-weight: 500; }
+  .tags { display: flex; gap: 18px; color: var(--muted); font-size: 13px; }
+  .tags span { display: inline-flex; align-items: center; gap: 6px; }
+  .tags svg { width: 14px; height: 14px; }
+  .actions { display: flex; gap: 8px; }
+  .btn { border: 0; border-radius: 8px; padding: 9px 14px; font: 500 13px 'Inter', sans-serif; cursor: pointer; }
+  .btn.ghost { background: var(--panel); color: var(--ink); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 12px; }
+  .main { position: relative; border-radius: 16px; overflow: hidden; background: var(--panel); aspect-ratio: 4 / 3; }
+  .main img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity .25s ease; }
+  .thumbs { display: grid; grid-auto-rows: 1fr; gap: 12px; }
+  .thumb { padding: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel); cursor: pointer; opacity: .62; transition: opacity .2s, border-color .2s; }
+  .thumb:hover, .thumb[aria-current="true"] { opacity: 1; }
+  .thumb[aria-current="true"] { border-color: var(--accent); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .caption { margin-top: 14px; color: var(--muted); font-size: 13px; }
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+    .thumbs { grid-template-columns: repeat(4, 1fr); grid-auto-rows: auto; }
+    .thumb { aspect-ratio: 4 / 3; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Foxlytics</h1>
+      <p class="sub">HR Analytics Dashboard · Behance case study</p>
+      <div class="tags">
+        <span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M2 6h12"/></svg>Dashboard</span>
+        <span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 4.5h4l1.5 1.5H14V13H2z"/></svg>UI/UX</span>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" type="button" id="prev" aria-label="Previous image">Previous</button>
+      <button class="btn primary" type="button" id="next" aria-label="Next image">Next image</button>
+    </div>
+  </header>
+  <div class="grid">
+    <figure class="main" style="margin:0"><img id="hero" src="laptop.jpg" alt=""></figure>
+    <div class="thumbs" id="thumbs"></div>
+  </div>
+  <p class="caption" id="cap"></p>
+</div>
+<script>
+  // Covers in the showcase; the first is the large image, the others sit in the thumbnail column.
+  const SHOTS = [
+    { src: 'laptop.jpg', cap: 'Laptop in a dark studio, lit with the dashboard’s lime and teal · laptop photo: ostudio, Unsplash', alt: 'Foxlytics dashboard on a laptop in a dark studio with green light' },
+    { src: 'rising.jpg', cap: '“Grow Gently.” · Foxlytics brand visual', alt: 'Grassy fisheye horizon around blue sky with the line Grow Gently. and the Foxlytics logo' },
+    { src: 'light.jpg', cap: 'Light studio display', alt: 'Foxlytics dashboard on a display in a light grey studio' },
+    { src: 'trees.jpg', cap: 'Display over motion-blurred trees', alt: 'Foxlytics dashboard on a display over motion-blurred trees' },
+    { src: 'foliage.jpg', cap: 'Display over foliage streaks · photo: Reinis Brūzītis, Unsplash', alt: 'Foxlytics dashboard on a display over green and yellow foliage streaks' },
+  ];
+  const hero = document.getElementById('hero'), thumbs = document.getElementById('thumbs'), cap = document.getElementById('cap');
+  let cur = 0;
+  const buttons = SHOTS.map((s, i) => {
+    const b = document.createElement('button'); b.className = 'thumb'; b.type = 'button';
+    b.setAttribute('aria-label', 'Show image ' + (i + 1) + ': ' + s.alt);
+    b.innerHTML = '<img src="' + s.src + '" alt="" loading="lazy">';
+    b.addEventListener('click', () => show(i)); thumbs.appendChild(b); return b;
+  });
+  function show(i) {
+    cur = (i + SHOTS.length) % SHOTS.length;
+    hero.style.opacity = 0;
+    setTimeout(() => { hero.src = SHOTS[cur].src; hero.alt = SHOTS[cur].alt; hero.style.opacity = 1; }, 120);
+    cap.textContent = SHOTS[cur].cap;
+    // the thumbnail column shows the four images that are not in the large slot, like the reference page
+    buttons.forEach((b, k) => { b.hidden = k === cur; b.setAttribute('aria-current', 'false'); });
+  }
+  document.getElementById('next').addEventListener('click', () => show(cur + 1));
+  document.getElementById('prev').addEventListener('click', () => show(cur - 1));
+  show(0);
+</script>
+</body>
+</html>
