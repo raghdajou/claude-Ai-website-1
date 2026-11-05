@@ -119,7 +119,7 @@ SCENES = {
     'flowers':  dict(src='114.webp', card=(12, 0, 672, 516), quad=[(270, 155.5), (433.5, 177.5), (427, 278), (264, 254)],
                      radius=2, keep_color=flowers_114),
     'meetsync': dict(src='115.png', card=(56, 27, 716, 543), quad=[(56, 125.5), (596, 129.5), (707.5, 416), (56, 417)],
-                     top=0),
+                     top=960),
     'dark-stand': dict(src='116.webp', card=(22, 49, 682, 565), quad=[(94, 138), (593, 210), (589, 533), (102, 433)],
                      clean=clean_116a),
     'tablet':   dict(src='116.webp', card=(730, 49, 1390, 565), quad=[(822, 179), (1298, 177), (1323, 441), (797, 441)], radius=9),
