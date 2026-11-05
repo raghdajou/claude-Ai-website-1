@@ -6,3 +6,5 @@
 - studio: laptop in a dark studio — ostudio
 - meadow-poppies: aerial poppy field — Bernd Dittrich
 - meadow-daisies: daisies from above — Hanseul Kim
+- meadow-bluefield: blue flower field — Aki
+- meadow-lupins: purple and pink lupins — Look Up Look Down Photography

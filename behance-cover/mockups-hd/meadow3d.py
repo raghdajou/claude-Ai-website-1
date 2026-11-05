@@ -8,6 +8,8 @@ DASH = Image.open('/tmp/claude-0/-home-user-claude-Ai-website-1/fd49522e-f0ff-52
 W, H, SS = 1616, 1264, 3
 name, cx, cy, scale = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4])
 YAW = math.radians(float(sys.argv[5]) if len(sys.argv) > 5 else -14)
+ELEV = float(sys.argv[6]) if len(sys.argv) > 6 else 52      # camera angle above the ground
+OCC = float(sys.argv[7]) if len(sys.argv) > 7 else 0        # share of the laptop's height that front flowers may cover
 
 # background: cover crop of the photo
 bg = Image.open(HERE + name + '.jpg').convert('RGB')
@@ -15,7 +17,7 @@ k = max(W / bg.width, H / bg.height); bg = bg.resize((round(bg.width * k), round
 bg = bg.crop(((bg.width - W) // 2, (bg.height - H) // 2, (bg.width - W) // 2 + W, (bg.height - H) // 2 + H))
 
 # camera: above the ground, tilted 52 degrees down, laptop at the origin (units: cm; z up)
-EL = math.radians(52); DIST = 120; F = 2.0 * W * SS * scale
+EL = math.radians(ELEV); DIST = 120; F = 2.0 * W * SS * scale
 cam = np.array([0, -DIST * math.cos(EL), DIST * math.sin(EL)])
 fwd = -cam / np.linalg.norm(cam); right = np.array([1.0, 0, 0]); up = np.cross(right, fwd)
 def P(p):
@@ -90,5 +92,18 @@ out.alpha_composite(shade)
 cshade = Image.new('RGBA', (W, H), (4, 6, 3, 0)); cshade.putalpha(cs.resize((W, H), Image.LANCZOS).point(lambda v: int(v * 0.75)))
 out.alpha_composite(cshade)
 out.alpha_composite(img.resize((W, H), Image.LANCZOS))
+if OCC > 0:   # flowers in front: restore coloured (non-green) flower pixels over the lower part of the laptop
+    la = np.asarray(img.resize((W, H), Image.LANCZOS))[..., 3] > 8
+    ys, xs = np.nonzero(la); bot = ys.max(); band = np.zeros((H, W), bool)
+    band[int(bot - OCC * (bot - ys.min())):, :] = True
+    hsv = np.asarray(bg.convert('HSV')).astype(np.float32); hh = hsv[..., 0] * 360 / 255
+    flower = (hsv[..., 1] > 60) & ~((hh > 50) & (hh < 150)) & (hsv[..., 2] > 70)
+    flower = ndimage.binary_opening(flower, iterations=1)
+    flower = ndimage.binary_fill_holes(ndimage.binary_closing(flower, iterations=5))   # whole clumps, not speckles
+    lab, n = ndimage.label(flower); sizes = ndimage.sum(flower, lab, range(1, n + 1))
+    flower = np.isin(lab, np.nonzero(sizes > 400)[0] + 1) & band
+    fm = ndimage.gaussian_filter(flower.astype(np.float32), 0.8)[..., None]
+    o2 = np.asarray(out.convert('RGB')).astype(np.float32) * (1 - fm) + np.asarray(bg).astype(np.float32) * fm
+    out = Image.fromarray(o2.astype(np.uint8)).convert('RGBA')
 o = out.convert('RGB'); o.save(HERE + f'meadow3d-{name}.png'); o.resize((808, 632), Image.LANCZOS).save(HERE + f'meadow3d-{name}-808.png')
 print('ok', name)
