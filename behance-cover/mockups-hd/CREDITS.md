@@ -4,3 +4,5 @@
 - dark: laptop and phone on a dark table — Allison Saeng
 - ipad: iPad with a trailing plant — Angèle Kamp
 - studio: laptop in a dark studio — ostudio
+- meadow-poppies: aerial poppy field — Bernd Dittrich
+- meadow-daisies: daisies from above — Hanseul Kim
