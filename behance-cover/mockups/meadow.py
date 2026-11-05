@@ -9,6 +9,7 @@ PALETTES = {
     'brand':  (72, 165, 182, 200),     # lime, teal, deep teal, sky: the dashboard's chart colours
     'white':  None,                    # white / cream petals
     'sunset': (38, 8, 350, 20),        # golden, red, rose, coral
+    'original': 'keep',                # the render's own flower colours
 }
 img = Image.open(I + '118.webp').convert('RGB').crop((202, 214, 1800, 1203))
 a = np.asarray(img).astype(np.float32) / 255
@@ -34,8 +35,9 @@ def coeffs(dst, pts):
     return np.linalg.solve(np.array(A, float), np.array(B, float))
 def recolour(name):
     pal = PALETTES[name]; out = a.copy()
-    ys, xs = np.nonzero(soft > 0.01); h = H[ys, xs]; s = S[ys, xs]; v = V[ys, xs]
-    if pal is None:     # white: drop saturation, lift value a little, keep a hint of warmth
+    ys, xs = np.nonzero(soft > (0.01 if pal != 'keep' else 9)); h = H[ys, xs]; s = S[ys, xs]; v = V[ys, xs]
+    if pal == 'keep': rgb = np.zeros((0, 3)); mix = 0
+    elif pal is None:     # white: drop saturation, lift value a little, keep a hint of warmth
         rgb = np.stack([v * 0.97 + 0.03, v * 0.96 + 0.03, v * 0.92 + 0.02], -1)
         mix = 0.65
     else:
