@@ -1,5 +1,5 @@
 # Behance cover: a Studio-Display-style monitor (thick black bezel, aluminium stand, soft shadow,
-# light floor fade, as in the reference) on the motion-blurred trees, its screen showing the
+# as in the reference) on a motion-blurred photo, its screen showing the
 # Foxlytics Projects dashboard cropped so both charts fill it. Drawn at 4x and reduced for clean edges.
 import sys, numpy as np
 from PIL import Image, ImageDraw, ImageFilter
@@ -7,6 +7,17 @@ I = '/tmp/claude-0/-home-user-claude-Ai-website-1/fd49522e-f0ff-52ed-b6c7-08cca4
 W, H = 1616, 1264; SS = 2                      # output size; supersampling for the shapes
 w, h = W * SS, H * SS
 
+def streak(img, angle=-24, length=0.07):
+    """the reference's look: a long diagonal motion blur, as if the camera swept past"""
+    big = img.rotate(-angle, Image.BICUBIC, expand=True)
+    a = np.asarray(big).astype(np.float32); L = max(3, int(img.width * length)); k = np.ones(L) / L
+    from scipy import ndimage
+    a = ndimage.convolve1d(a, k, axis=1, mode='reflect')
+    out = Image.fromarray(a.clip(0, 255).astype(np.uint8)).rotate(angle, Image.BICUBIC)
+    l, t = (out.width - img.width) // 2, (out.height - img.height) // 2
+    return out.crop((l, t, l + img.width, t + img.height))
+
+SRC = sys.argv[2] if len(sys.argv) > 2 else None        # another photo, given the same motion blur
 # background: the trees, minus the screenshot's dark rounded border; the slider card in the middle is
 # replaced by blurred surroundings (the monitor covers it, this only keeps its edges from showing)
 bg = Image.open(I + '109.webp').convert('RGB').crop((9, 9, 1447, 793))
@@ -18,6 +29,8 @@ for _ in range(3):                                       # pull the surroundings
     fill = np.asarray(Image.fromarray(a2.clip(0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(40))).astype(np.float32)
 a[y0:y1, x0:x1] = fill[y0:y1, x0:x1]
 bg = Image.fromarray(a.clip(0, 255).astype(np.uint8))
+if SRC and '/' in SRC: bg = Image.open(SRC).convert('RGB')       # a photo already shot with motion blur
+elif SRC: bg = streak(Image.open(I + SRC).convert('RGB'))
 k = max(w / bg.width, h / bg.height)
 bg = bg.resize((round(bg.width * k), round(bg.height * k)), Image.LANCZOS)
 bg = bg.crop(((bg.width - w) // 2, (bg.height - h) // 2, (bg.width - w) // 2 + w, (bg.height - h) // 2 + h))
@@ -35,20 +48,13 @@ d.rounded_rectangle((MX + 10 * SS, MY + 30 * SS, MX + MW - 10 * SS, MY + MH + 40
 d.rectangle((NX + 6 * SS, MY + MH, NX + NW + 30 * SS, h), fill=(0, 0, 0, 70))
 sh = sh.filter(ImageFilter.GaussianBlur(36 * SS)); canvas.alpha_composite(sh)
 
-# light floor fade at the bottom, as in the reference
-fade = np.zeros((h, w, 4), np.uint8); fade[..., :3] = (236, 238, 236)
-yy = np.linspace(0, 1, h)[:, None]
-fade[..., 3] = (np.clip((yy - 0.80) / 0.20, 0, 1) ** 1.6 * 200).astype(np.uint8)
-canvas.alpha_composite(Image.fromarray(fade))
-
-# stand column: brushed aluminium, darker just under the monitor, fading into the floor light
+# stand column: brushed aluminium, darker just under the monitor
 st = np.zeros((h - MY - MH, NW, 4), np.float32)
 xs = np.linspace(0, 1, NW)[None, :]; ys = np.linspace(0, 1, h - MY - MH)[:, None]
 tone = 206 + 22 * np.sin(np.pi * xs) - 34 * np.exp(-ys * 9) + 18 * ys
 st[..., 0] = tone; st[..., 1] = tone + 1; st[..., 2] = tone + 3; st[..., 3] = 255
 st[:, :2 * SS, :3] *= 0.86; st[:, -2 * SS:, :3] *= 0.86          # edges
 canvas.alpha_composite(Image.fromarray(st.clip(0, 255).astype(np.uint8)), (NX, MY + MH))
-canvas.alpha_composite(Image.fromarray(fade))                       # floor light over the stand foot
 
 # bezel
 bz = layer(); d = ImageDraw.Draw(bz)
