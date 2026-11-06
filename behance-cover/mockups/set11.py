@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 I = '/tmp/claude-0/-home-user-claude-Ai-website-1/fd49522e-f0ff-52ed-b6c7-08cca43cc4fd/images/'
 CARD = (175, 163.5, 1425, 1036)          # measured white card edges
-SCREENS = {'brand': ('141.jpg', None), 'payroll': ('130.jpg', 0), 'projects': ('131.jpg', 0)}   # dashboards from the top: nav bar shows, like a page
+SCREENS = {'brand': ('141.jpg', None), 'payroll': ('130.jpg', 255), 'projects': ('131.jpg', 470)}   # bands chosen so the whole charts show
 base = Image.open(I + '162.webp').convert('RGB')
 for scr, (df, top) in SCREENS.items():
     d = Image.open(I + df).convert('RGB'); r = (CARD[2] - CARD[0]) / (CARD[3] - CARD[1])
