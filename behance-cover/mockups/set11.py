@@ -1,5 +1,6 @@
 # Flat white web card on a grainy green-white gradient ("mia"): the card becomes a Foxlytics page.
-# Cover (1616 x 1264, 808 x 632) and Behance artboard (1400 x 788, 2800 x 1576) versions.
+# Cover (1616 x 1264, 808 x 632), Behance artboard (1400 x 788, 2800 x 1576) and Upwork portfolio
+# (4:3: 1000 x 750 and 2000 x 1500, JPEG to stay under Upwork's 5 MB limit) versions.
 import numpy as np
 from PIL import Image
 I = '/tmp/claude-0/-home-user-claude-Ai-website-1/fd49522e-f0ff-52ed-b6c7-08cca43cc4fd/images/'
@@ -24,6 +25,8 @@ for scr, (df, top) in SCREENS.items():
             W, H = out.size; cw = round(H * 808 / 632); x0 = (W - cw) // 2
             o = out.crop((x0, 0, x0 + cw, H)).resize((1616, 1264), Image.LANCZOS)
             o.save(f's11-mia-{scr}.png'); o.resize((808, 632), Image.LANCZOS).save(f's11-mia-{scr}-808.png')
+        if K == 2:   # Upwork: the whole 4:3 scene
+            for w, h in ((2000, 1500), (1000, 750)): out.resize((w, h), Image.LANCZOS).save(f'uw-mia-{scr}-{w}.jpg', quality=95, subsampling=0)
         y0 = 150 * K   # 16:9 window (1600 x 900) holding the whole card
         a = out.crop((0, y0, out.width, y0 + 900 * K))
         (a.resize((2800, 1576), Image.LANCZOS).save(f'ab-mia-{scr}-2800.png') if K == 2 else a.resize((1400, 788), Image.LANCZOS).save(f'ab-mia-{scr}-1400.png'))
