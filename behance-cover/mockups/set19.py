@@ -13,7 +13,8 @@ def compose(bg, l, t, r, b, K):
     sh = np.zeros((H, W), np.float32); sh[t + 18 * K:b, l:r] = 1
     sc *= (1 - ndimage.gaussian_filter(sh, 30 * K) * 0.55)[..., None]
     p = Image.open(I + SRC).convert('RGB'); k = (r - l) / p.width
-    p = p.resize((r - l, round(p.height * k)), Image.LANCZOS); y = round(TOP * k); p = p.crop((0, y, r - l, y + b - t))
+    p = p.resize((r - l, round(p.height * k)), Image.LANCZOS); y = round(TOP * k)
+    q = Image.new('RGB', (r - l, b - t), p.getpixel(((r - l) // 2, p.height - 3))); q.paste(p.crop((0, y, r - l, min(p.height, y + b - t))), (0, 0)); p = q   # page colour past its end
     p = p.point(lambda v: round(255 * (v / 255) ** 1.12)).filter(ImageFilter.UnsharpMask(radius=0.7 * k, percent=90, threshold=2))
     sc[t:b, l:r] = np.asarray(p).astype(np.float32)
     return Image.fromarray(sc.clip(0, 255).astype(np.uint8))
