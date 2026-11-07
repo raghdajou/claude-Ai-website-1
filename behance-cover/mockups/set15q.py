@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 I = '/tmp/claude-0/-home-user-claude-Ai-website-1/fd49522e-f0ff-52ed-b6c7-08cca43cc4fd/images/'
 Q = [(621.9, 195.1), (976.6, 365.2), (880.4, 719.2), (514.4, 578.9)]
 R = 1.547
-SCREENS = {'analytics': ('173.jpg', 540)}
+SCREENS = {'analytics': ('173.jpg', 440)}   # 100 px more from the top of the page
 def coeffs(dst, pts):
     A, B = [], []
     for (x, y), (u, v) in zip(dst, pts):
