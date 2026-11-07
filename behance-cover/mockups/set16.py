@@ -1,5 +1,5 @@
 # Single wide web page on grey ("nuro single"): the page becomes the Foxlytics Employees screen from
-# its top, enlarged with Lanczos and a light unsharp mask. Upwork 4:3 (1000x750, 2000x1500 JPEG) and
+# the middle of the page (The Employees table), enlarged with Lanczos and a light unsharp mask. Upwork 4:3 (1000x750, 2000x1500 JPEG) and
 # Behance artboard (1400x788, 2800x1576).
 import numpy as np
 from PIL import Image, ImageFilter
@@ -10,7 +10,8 @@ for K in (1, 2):
     sc = base.resize((W0 * K, H0 * K), Image.LANCZOS)
     l, t, r, b = [round(v * K) for v in PAGE]
     p = Image.open(I + '181.jpg').convert('RGB'); k = (r - l) / p.width
-    p = p.resize((r - l, round(p.height * k)), Image.LANCZOS).crop((0, 0, r - l, b - t))
+    TOP = 760   # source row: start at 'The Employees' section
+    p = p.resize((r - l, round(p.height * k)), Image.LANCZOS); y = round(TOP * k); p = p.crop((0, y, r - l, y + b - t))
     p = p.filter(ImageFilter.UnsharpMask(radius=0.8 * k, percent=90, threshold=2))
     sc.paste(p, (l, t))
     W, H = sc.size; cw = round(H * 4 / 3); x0 = (W - cw) // 2
