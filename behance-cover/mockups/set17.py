@@ -14,11 +14,9 @@ for K in (1, 2):
     p = Image.open(I + SRC).convert('RGB'); k = (r - l) / p.width
     p = p.resize((r - l, round(p.height * k)), Image.LANCZOS); y = round(TOP * k); bg = p.getpixel((p.width // 2, p.height - 3))
     q = Image.new('RGB', (r - l, b - t), bg); q.paste(p.crop((0, y, r - l, min(p.height, y + b - t))), (0, 0)); p = q   # page colour below its end
-    # very high quality: enlarge in two Lanczos steps, deepen the text tones (gamma) and add contrast,
-    # then a two-pass unsharp mask (fine detail + edge) so small UI text reads crisp
-    p = p.point(lambda v: round(255 * (v / 255) ** 1.22)); p = ImageEnhance.Contrast(p).enhance(1.08)
-    p = p.filter(ImageFilter.UnsharpMask(radius=0.6 * k, percent=120, threshold=1))
-    p = p.filter(ImageFilter.UnsharpMask(radius=1.4 * k, percent=40, threshold=3))
+    # high quality: Lanczos enlarge, slightly deeper text tones, one gentle unsharp mask (no halos)
+    p = p.point(lambda v: round(255 * (v / 255) ** 1.12))
+    p = p.filter(ImageFilter.UnsharpMask(radius=0.7 * k, percent=90, threshold=2))
     sc.paste(p, (l, t))
     W, H = sc.size; cw = round(H * 4 / 3); x0 = (W - cw) // 2
     sc.crop((x0, 0, x0 + cw, H)).resize((2000, 1500) if K == 2 else (1000, 750), Image.LANCZOS).save(
