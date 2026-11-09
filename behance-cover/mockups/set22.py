@@ -6,10 +6,9 @@ from PIL import Image, ImageDraw, ImageFilter
 exec(open('set8.py').read().split('for (name, (f, q, asp')[0])
 f, q, asp, notch, _ = SCENES['chair']; DF, TOP = '209.jpg', 470
 base = Image.open(I + f).convert('RGB'); dash = Image.open(I + DF).convert('RGB'); r = asp
-# fit the page from its top down to the end of the chart (insight notes removed) on screen
-# without stretching: crop rows 0-1448 at full width, centre it on the page colour to the screen ratio
-band = dash.crop((0, 0, dash.width, 1448)); cw = round(band.height * r)   # page top to chart end, insight notes left out; cw = round(band.height * r)
-pg = Image.new('RGB', (cw, band.height), dash.getpixel((1440, 1700))); pg.paste(band, ((cw - band.width) // 2, 0))
+# like the single-page reference: full width, starting just above 'Workforce Cost Intelligence', down to
+# the bottom value labels of the chart (no stretching: a 1.547 band of the page)
+bh = round(dash.width / r); pg = dash.crop((0, 482, dash.width, 482 + bh))
 src = pg.resize((round(3600 * r), 3600), Image.LANCZOS)
 sm = Image.new('L', src.size, 0); d = ImageDraw.Draw(sm); s = src.height / 2400
 d.rounded_rectangle((0, 0, src.width - 1, src.height - 1), 55 * s, fill=255); d.rectangle((0, src.height // 2, src.width, src.height), fill=255)
