@@ -1,10 +1,10 @@
 # Two stacked web pages on black ("stack", 216): top page = Analytics from its Productive Heat Map,
-# bottom page = Payroll from the top (runs off the bottom edge). Upwork 4:3 (1000, 2000 JPEG;
+# bottom page = Payroll's first chart (Payroll Efficiency Analysis). Upwork 4:3 (1000, 2000 JPEG;
 # 4000 PNG + JPEG) and Behance artboard 16:9 (1400, 2800).
 from PIL import Image, ImageFilter
 I = '/tmp/claude-0/-home-user-claude-Ai-website-1/fd49522e-f0ff-52ed-b6c7-08cca43cc4fd/images/'
 base = Image.open(I + '216.webp').convert('RGB')
-PAGES = [('218.jpg', 815, (248, 0, 1312, 626)), ('217.webp', 0, (248, 661, 1312, 1200))]
+PAGES = [('218.jpg', 815, (248, 0, 1312, 626)), ('217.webp', 1062, (248, 661, 1312, 1200))]
 def tone(p, k): return p.point(lambda v: round(255 * (v / 255) ** 1.12)).filter(ImageFilter.UnsharpMask(radius=0.7 * k, percent=90, threshold=2))
 for F in (1, 2, 2.5):
     W, H = round(1600 * F), round(1200 * F); out = base.resize((W, H), Image.LANCZOS)
