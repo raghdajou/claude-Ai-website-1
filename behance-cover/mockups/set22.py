@@ -1,4 +1,4 @@
-# Laptop on the purple chair (158) with the Employees screen (Workforce Cost Intelligence), rendered
+# Laptop on the purple chair (158) with the whole Employees Workforce Cost section (fitted, not stretched), rendered
 # at 1x, 2x and 2.5x (4000 px) scene scale: cover 1616x1264 (+808), Upwork 4:3 (1000x750, 2000x1500
 # JPEG, 4000x3000 PNG), Behance artboard 16:9 (1400x788, 2800x1576).
 import math, numpy as np
@@ -6,7 +6,11 @@ from PIL import Image, ImageDraw, ImageFilter
 exec(open('set8.py').read().split('for (name, (f, q, asp')[0])
 f, q, asp, notch, _ = SCENES['chair']; DF, TOP = '209.jpg', 470
 base = Image.open(I + f).convert('RGB'); dash = Image.open(I + DF).convert('RGB'); r = asp
-bh = round(dash.width / r); src = dash.crop((0, TOP, dash.width, TOP + bh)).resize((round(3600 * r), 3600), Image.LANCZOS)
+# fit the whole Workforce Cost Intelligence section (title to the notes under the chart) on screen
+# without stretching: crop rows 470-1555 at full width, centre it on the page colour to the screen ratio
+band = dash.crop((0, 470, dash.width, 1555)); cw = round(band.height * r)
+pg = Image.new('RGB', (cw, band.height), dash.getpixel((1440, 1700))); pg.paste(band, ((cw - band.width) // 2, 0))
+src = pg.resize((round(3600 * r), 3600), Image.LANCZOS)
 sm = Image.new('L', src.size, 0); d = ImageDraw.Draw(sm); s = src.height / 2400
 d.rounded_rectangle((0, 0, src.width - 1, src.height - 1), 55 * s, fill=255); d.rectangle((0, src.height // 2, src.width, src.height), fill=255)
 nw = 392 / 3713 * src.width; cx = src.width / 2; d.rounded_rectangle((cx - nw / 2, -60 * s, cx + nw / 2, 66 * s), 22 * s, fill=0)
