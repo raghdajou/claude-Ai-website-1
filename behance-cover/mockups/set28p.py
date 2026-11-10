@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 I = '/tmp/claude-0/-home-user-claude-Ai-website-1/fd49522e-f0ff-52ed-b6c7-08cca43cc4fd/images/'
 BG = (24, 24, 24)
-C_IN, C_OUT = (214, 216, 218), (171, 174, 177)
+C_IN, C_OUT = (236, 237, 239), (206, 208, 211)
 SN = {   # source, x0, y0, crop width, aspect
     'heat':   ('224.jpg', -8, 826, 826, 1.78),     # Analytics: Productive Heat Map
     'bubble': ('221.jpg', 180, 470, 1300, 1.67),   # Payroll: Efficiency Analysis bubbles
@@ -63,7 +63,7 @@ def render(F):
     pass   # no grain: keeps the PNG under 5 MB; the gradient is smooth enough at 8 bits
     # soft, wide contact shadows under the cards (offset down, as if lit from above)
     from scipy import ndimage
-    sh = ndimage.shift(m, (18 * F, 6 * F), order=1); sh = ndimage.gaussian_filter(sh, 26 * F) * 0.30 + ndimage.gaussian_filter(m, 5 * F) * 0.10
+    sh = ndimage.shift(m, (18 * F, 6 * F), order=1); sh = ndimage.gaussian_filter(sh, 26 * F) * 0.20 + ndimage.gaussian_filter(m, 5 * F) * 0.07
     bg = bg * (1 - np.clip(sh, 0, 0.45))[..., None]
     out = bg * (1 - m[..., None]) + cards * m[..., None]
     return Image.fromarray(out.clip(0, 255).astype(np.uint8))
