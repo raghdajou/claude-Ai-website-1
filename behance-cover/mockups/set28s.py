@@ -38,6 +38,9 @@ def snap(key, w, h):
     pad = round(cw * 0.05)   # breathing room above each card's title: the crop's top row repeated
     c = Image.new('RGB', (cw, ch), page); c.paste(src.crop((max(x0, 0), y0, min(x0 + cw, src.width), min(y0 + ch - pad, src.height))), (max(-x0, 0), pad))
     row = c.crop((0, pad, cw, pad + 1)).resize((cw, pad)); c.paste(row, (0, 0))
+    if key != 'heat':   # breathing room on the left too (the heat map in the centre stays as it is)
+        pl = round(cw * 0.05); body = c.crop((0, 0, cw - pl, ch))
+        c = Image.new('RGB', (cw, ch), page); c.paste(body, (pl, 0)); c.paste(body.crop((0, 0, 1, ch)).resize((pl, ch)), (0, 0))
     k = w / cw; c = c.resize((w, h), Image.LANCZOS)
     return c.point(lambda v: round(255 * (v / 255) ** 1.1)).filter(ImageFilter.UnsharpMask(radius=0.6 * k, percent=80, threshold=2))
 def render(F):
