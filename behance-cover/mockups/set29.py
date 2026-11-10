@@ -12,8 +12,11 @@ def coeffs(dst, pts):
 base = Image.open(I + '228.webp').convert('RGB')
 sw = (math.dist(Q[0], Q[1]) + math.dist(Q[3], Q[2])) / 2; sh = (math.dist(Q[0], Q[3]) + math.dist(Q[1], Q[2])) / 2; r = sw / sh
 page = Image.open(I + '229.jpg').convert('RGB')
-TOP = 100                                   # just above the "Leave Requests" title
-band = page.crop((0, TOP, page.width, TOP + round(page.width / r)))
+# a little space above "Requests In Numbers", down to the end of the first charts' notes; the band is
+# taller than the screen ratio, so it is centred on the page colour (no stretching)
+TOP, BOT = 178, 655
+h = BOT - TOP; w = round(h * r); bg = page.getpixel((page.width // 2, page.height - 5))
+band = Image.new('RGB', (w, h), bg); band.paste(page.crop((0, TOP, page.width, BOT)), ((w - page.width) // 2, 0))
 src = band.resize((round(2600 * r), 2600), Image.LANCZOS)
 src = src.point(lambda v: round(255 * (v / 255) ** 1.12)).filter(ImageFilter.UnsharpMask(radius=2.4, percent=90, threshold=2))
 F = 2; W, H = 4000, 3000; SS = 2
@@ -26,4 +29,4 @@ out = Image.composite(warped, sc, m)
 out.save('uw-allia-leave-x4-4000.png', optimize=True)
 out.resize((2000, 1500), Image.LANCZOS).save('uw-allia-leave-2000.png', optimize=True); out.resize((1000, 750), Image.LANCZOS).save('uw-allia-leave-1000.png', optimize=True)
 out.crop((0, 200, 4000, 2450)).resize((2800, 1576), Image.LANCZOS).save('ab-allia-leave-2800.png')
-print('ratio', round(r, 3), 'band rows', TOP, TOP + round(page.width / r))
+print('ratio', round(r, 3), w, h)
