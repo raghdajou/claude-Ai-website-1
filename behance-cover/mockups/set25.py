@@ -30,7 +30,9 @@ page = Image.open(I + PAGE).convert('RGB')
 # --- tilted iPad in a hand ---
 base = Image.open(I + '213.png').convert('RGB'); a = np.asarray(base).astype(int); g = a.mean(-1)
 Q = [(612.7, 144.9), (1240.6, 532.5), (950.2, 1003.0), (322.2, 615.4)]; R = 4 / 3
-band = page.crop(BOX)   # a 4:3 window of the page
+x0, y0, x1, y1 = BOX   # a 4:3 window of the page; parts outside the page are filled with its background
+band = Image.new('RGB', (x1 - x0, y1 - y0), page.getpixel((page.width // 2, page.height - 5)))
+band.paste(page.crop((max(x0, 0), max(y0, 0), min(x1, page.width), min(y1, page.height))), (max(-x0, 0), max(-y0, 0)))
 src = band.resize((3200, 2400), Image.LANCZOS)
 sm = Image.new('L', src.size, 0); ImageDraw.Draw(sm).rounded_rectangle((0, 0, src.width - 1, src.height - 1), 70, fill=255)
 quad = Image.new('L', base.size, 0); ImageDraw.Draw(quad).polygon(Q, fill=255); quad = np.asarray(quad) > 0
