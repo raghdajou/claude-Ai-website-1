@@ -14,9 +14,11 @@ sw = (math.dist(Q[0], Q[1]) + math.dist(Q[3], Q[2])) / 2; sh = (math.dist(Q[0], 
 page = Image.open(I + '229.jpg').convert('RGB')
 # a little space above "Requests In Numbers", down to the end of the first charts' notes; the band is
 # taller than the screen ratio, so it is centred on the page colour (no stretching)
-TOP, BOT = 178, 655
-h = BOT - TOP; w = round(h * r); bg = page.getpixel((page.width // 2, page.height - 5))
-band = Image.new('RGB', (w, h), bg); band.paste(page.crop((0, TOP, page.width, BOT)), ((w - page.width) // 2, 0))
+TOP, BOT = 180, 655; PAD = 34
+h = BOT - TOP + PAD; w = round(h * r); bg = page.getpixel((page.width // 2, page.height - 5))
+band = Image.new('RGB', (w, h), bg); import numpy as np
+pa = np.asarray(page); body = Image.fromarray(np.concatenate([np.repeat(pa[TOP:TOP + 1], PAD, 0), pa[TOP:BOT]], 0))
+band.paste(body, ((w - page.width) // 2, 0))
 src = band.resize((round(2600 * r), 2600), Image.LANCZOS)
 src = src.point(lambda v: round(255 * (v / 255) ** 1.12)).filter(ImageFilter.UnsharpMask(radius=2.4, percent=90, threshold=2))
 F = 2; W, H = 4000, 3000; SS = 2

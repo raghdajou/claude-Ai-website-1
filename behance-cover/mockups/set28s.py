@@ -8,7 +8,7 @@ I = '/tmp/claude-0/-home-user-claude-Ai-website-1/fd49522e-f0ff-52ed-b6c7-08cca4
 BG = (24, 24, 24)
 C_IN, C_OUT = (232, 232, 232), (232, 232, 232)   # flat soft neutral grey, as the Integration reference
 SN = {   # source, x0, y0, crop width, aspect
-    'heat':   ('224.jpg', -8, 826, 826, 1.78),     # Analytics: Productive Heat Map
+    'heat':   ('224.jpg', -47, 820, 904, 1.78),     # Analytics: Productive Heat Map
     'bubble': ('221.jpg', 180, 470, 1300, 1.67),   # Payroll: Efficiency Analysis bubbles
     'perf':   ('224.jpg', 100, 1420, 700, 1.67),    # Analytics: Performance Distribute
     'pipe':   ('222.jpg', 170, 790, 1175, 1.6),    # Projects: Pipeline Flow
@@ -35,7 +35,9 @@ GAP = 60
 def snap(key, w, h):
     f, x0, y0, cw, a = SN[key]; src = Image.open(I + f).convert('RGB'); ch = round(cw / a)
     page = src.getpixel((src.width // 2, src.height - 5))
-    c = Image.new('RGB', (cw, ch), page); c.paste(src.crop((max(x0, 0), y0, min(x0 + cw, src.width), min(y0 + ch, src.height))), (max(-x0, 0), 0))
+    pad = round(cw * 0.05)   # breathing room above each card's title: the crop's top row repeated
+    c = Image.new('RGB', (cw, ch), page); c.paste(src.crop((max(x0, 0), y0, min(x0 + cw, src.width), min(y0 + ch - pad, src.height))), (max(-x0, 0), pad))
+    row = c.crop((0, pad, cw, pad + 1)).resize((cw, pad)); c.paste(row, (0, 0))
     k = w / cw; c = c.resize((w, h), Image.LANCZOS)
     return c.point(lambda v: round(255 * (v / 255) ** 1.1)).filter(ImageFilter.UnsharpMask(radius=0.6 * k, percent=80, threshold=2))
 def render(F):

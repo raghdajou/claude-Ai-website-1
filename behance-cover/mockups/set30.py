@@ -10,7 +10,10 @@ ImageDraw.Draw(page).rectangle((16, TOP - 6, 64, 187), fill=(241, 241, 241))   #
 F = 2.5; W, H = 4000, 3000
 out = base.resize((W, H), Image.LANCZOS)
 w, h = round((R - L) * F), round((1200 - T) * F); k = w / page.width
-p = page.resize((w, round(page.height * k)), Image.LANCZOS); y = round(TOP * k); p = p.crop((0, y, w, y + h))
+PAD = 34   # extra space above the KPIs (source px): the clean row at TOP repeated
+import numpy as np
+pa = np.asarray(page); page = Image.fromarray(np.concatenate([np.repeat(pa[TOP:TOP + 1], PAD, 0), pa[TOP:]], 0)); TOP2 = 0
+p = page.resize((w, round(page.height * k)), Image.LANCZOS); p = p.crop((0, 0, w, h))
 p = p.point(lambda v: round(255 * (v / 255) ** 1.12)).filter(ImageFilter.UnsharpMask(radius=0.7 * k, percent=90, threshold=2))
 out.paste(p, (round(L * F), round(T * F)))
 out.save('uw-hartt-employees-x4-4000.png', optimize=True)
