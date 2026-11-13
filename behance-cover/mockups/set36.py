@@ -3,7 +3,7 @@
 # stretching on the page colour. 4000x3000 PNG (+2000, 1000) and 16:9 artboard.
 from PIL import Image, ImageFilter
 I = '/tmp/claude-0/-home-user-claude-Ai-website-1/fd49522e-f0ff-52ed-b6c7-08cca43cc4fd/images/'
-L, T, R, B = 100.5, 123.5, 1897.5, 1135.5; TOP, BOT = 180, 1112   # a bit more from the top (Attendees title, Ask Foxlytics) down to the chart's end
+L, T, R, B = 100.5, 123.5, 1897.5, 1135.5; TOP, BOT = 340, 1112   # from just above Attendance Flow Analysis down to the chart's end
 base = Image.open(I + '251.webp').convert('RGB'); page = Image.open(I + '252.jpg').convert('RGB')
 bg = page.getpixel((page.width // 2, page.height - 5)); asp = (R - L) / (B - T)
 h = BOT - TOP; w = round(h * asp); band = Image.new('RGB', (w, h), bg)
