@@ -6,12 +6,11 @@ I = '/tmp/claude-0/-home-user-claude-Ai-website-1/fd49522e-f0ff-52ed-b6c7-08cca4
 L, T, R, B = 100.5, 123.5, 1897.5, 1135.5; TOP, BOT = 340, 1112   # from just above Attendance Flow Analysis down to the chart's end
 base = Image.open(I + '251.webp').convert('RGB'); page = Image.open(I + '252.jpg').convert('RGB')
 bg = page.getpixel((page.width // 2, page.height - 5)); asp = (R - L) / (B - T)
-# fill the screen: keep the title row and the whole chart, leave out the filter / control rows
-# between them (rows 418-600), so the section is almost exactly the screen's shape
-X0 = 112
-top_part = page.crop((X0, TOP, page.width, 418)); chart = page.crop((X0, 600, page.width, BOT))
-h = top_part.height + chart.height; w = round(h * asp); band = Image.new('RGB', (w, h), bg)
-ox = (w - top_part.width) // 2; band.paste(top_part, (ox, 0)); band.paste(chart, (ox, top_part.height))
+# chart only (no section title or controls), filling the screen edge to edge at full content width
+X0 = 112; w = page.width - X0; h = round(w / asp); y0 = 600 - (h - 512) // 2   # chart rows 600-1112, centred
+band = page.crop((X0, y0, page.width, y0 + h))
+from PIL import ImageDraw
+ImageDraw.Draw(band).rectangle((0, 0, band.width, 598 - y0), fill=bg)   # hide the divider line above the chart
 F = 2; W, H = 4000, 3000; out = base.resize((W, H), Image.LANCZOS)
 cw, ch = round((R - L) * F), round((B - T) * F); k = cw / w
 snap = band.resize((cw, ch), Image.LANCZOS).point(lambda v: round(255 * (v / 255) ** 1.08)).filter(ImageFilter.UnsharpMask(radius=0.7 * k, percent=70, threshold=2))
