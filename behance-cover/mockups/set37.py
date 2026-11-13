@@ -8,7 +8,7 @@ base = Image.open(I + '251.webp').convert('RGB'); page = Image.open(I + '253.png
 bg = page.getpixel((page.width // 2, page.height - 5)); asp = (R - L) / (B - T)
 # Employees: from a little above "Workforce Cost Intelligence" down to the chart's bottom labels, sidebar left out;
 # the section is taller than the screen's shape, so it is centred on the page colour (no stretching)
-X0, TOP, BOT = 152, 455, 1442
+X0, TOP, BOT = 152, 540, 1442   # title left out: starts just above the three cards
 sec = page.crop((X0, TOP, page.width, BOT)); h = sec.height; w = round(h * asp)
 band = Image.new('RGB', (w, h), bg); band.paste(sec, ((w - sec.width) // 2, 0))
 F = 2; W, H = 4000, 3000; out = base.resize((W, H), Image.LANCZOS)
